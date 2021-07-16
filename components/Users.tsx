@@ -1,0 +1,155 @@
+import NextLink from "next/link";
+import { useState, useEffect } from "react";
+import {
+  Avatar,
+  Box,
+  Divider,
+  Heading,
+  HStack,
+  Link,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+
+import type { IRole } from "../types/roles";
+import type { ILocation, IUser } from "../types/users";
+import { MultiSelect } from "./MultiSelect";
+import { pluralize } from "../lib/utils";
+
+type UserProps = {
+  user: IUser;
+};
+
+function User({ user }: UserProps) {
+  const noLocations = user.location_roles.length;
+  const noRoles = user.location_roles.reduce(
+    (count, loc_rol) => count + loc_rol.roles.length,
+    0
+  );
+  const roles =
+    noRoles === 0 && noLocations === 0
+      ? "No roles assigned"
+      : `${noRoles} roles in ${noLocations} locations`;
+
+  return (
+    <Tr>
+      <Td>
+        <Avatar name={user.first_name + " " + user.last_name} size="sm" />
+      </Td>
+      <Td>
+        {user.first_name} {user.last_name}
+      </Td>
+      <Td>{user.email}</Td>
+      <Td>{user.position}</Td>
+      <Td>
+        <NextLink href="/">
+          <Link>{roles}</Link>
+        </NextLink>
+      </Td>
+    </Tr>
+  );
+}
+
+type UsersProps = {
+  users: IUser[];
+};
+
+function Users({ users }: UsersProps) {
+  const _users = users.map((user: IUser) => <User key={user.id} user={user} />);
+
+  return (
+    <Table variant="simple" size="sm">
+      <Thead>
+        <Tr>
+          <Th w={1}></Th>
+          <Th>Name</Th>
+          <Th>Email</Th>
+          <Th>Position</Th>
+          <Th>Roles</Th>
+        </Tr>
+      </Thead>
+      <Tbody>{_users}</Tbody>
+    </Table>
+  );
+}
+
+type UserLocationsRolesProps = {
+  user: IUser;
+  locations: ILocation[];
+  roles: IRole[];
+  editingEnabled: boolean;
+};
+
+function UserLocationsRoles({
+  user,
+  locations,
+  roles,
+}: UserLocationsRolesProps) {
+  type ILocationRoles = {
+    location: ILocation;
+    roles: IRole[];
+  };
+  const [selectionSummary, setSelectionSummary] = useState("");
+  const [selectedLocations, setSelectedLocations] = useState<ILocation[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<IRole[]>([]);
+  const [locationRoles, setLocationRoles] = useState<ILocationRoles[]>([]);
+
+  useEffect(() => {
+    const _locationRoles: ILocationRoles[] = [];
+    selectedLocations.forEach((location: ILocation) =>
+      _locationRoles.push({ location: location, roles: selectedRoles })
+    );
+    setLocationRoles(_locationRoles);
+    setSelectionSummary(
+      `${pluralize(selectedRoles.length, "role")} in ${pluralize(
+        selectedLocations.length,
+        "location"
+      )}.`
+    );
+
+    user.location_roles = locationRoles;
+  }, [selectedLocations, selectedRoles]);
+
+  const rolesMultiSelect =
+    selectedLocations.length > 0 ? (
+      <MultiSelect
+        title="Roles"
+        items={roles}
+        onSelect={(roles: IRole[]) => setSelectedRoles(roles)}
+      />
+    ) : null;
+
+  return (
+    <VStack spacing={3}>
+      <Heading size="md">
+        {user.first_name} {user.last_name}
+      </Heading>
+      <Text>{selectionSummary}</Text>
+      <Divider />
+      <HStack w="full" align="flex-start">
+        <Box w="49%">
+          <MultiSelect
+            title="Locations"
+            items={locations}
+            onSelect={(locations: ILocation[]) => {
+              setSelectedLocations(locations);
+              if (locations.length === 0) {
+                setSelectedRoles([]);
+              }
+            }}
+          />
+        </Box>
+        <Divider orientation="vertical" />
+        <Box w="49%">{rolesMultiSelect}</Box>
+      </HStack>
+    </VStack>
+  );
+}
+
+export { Users, UserLocationsRoles };
