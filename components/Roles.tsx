@@ -1,5 +1,6 @@
 import {
   Avatar,
+  Box,
   Table,
   Thead,
   Tbody,
@@ -19,6 +20,10 @@ type RoleProps = {
 };
 
 function Role({ role }: RoleProps) {
+  return <Box>{role.name}</Box>;
+}
+
+function RoleRow({ role }: RoleProps) {
   const _perms = role.permissions.map((perm: IPermission) => (
     <WrapItem key={perm.id}>
       <Permission permission={perm} />
@@ -39,7 +44,9 @@ type RolesProps = {
 };
 
 function Roles({ roles }: RolesProps) {
-  const _roles = roles.map((role: IRole) => <Role key={role.id} role={role} />);
+  const _roles = roles.map((role: IRole) => (
+    <RoleRow key={role.id} role={role} />
+  ));
 
   return (
     <Table variant="simple" size="md">
@@ -54,4 +61,4 @@ function Roles({ roles }: RolesProps) {
   );
 }
 
-export { Roles };
+export { Role, Roles };

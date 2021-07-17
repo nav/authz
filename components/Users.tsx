@@ -7,6 +7,7 @@ import {
   Heading,
   HStack,
   Link,
+  ListItem,
   Table,
   Thead,
   Tbody,
@@ -14,12 +15,15 @@ import {
   Th,
   Td,
   Text,
+  UnorderedList,
   VStack,
 } from "@chakra-ui/react";
 
 import type { IRole } from "../types/roles";
 import type { ILocation, IUser } from "../types/users";
+import { Role } from "./Roles";
 import { MultiSelect } from "./MultiSelect";
+import { Checkbox } from "./Checkbox";
 import { pluralize } from "../lib/utils";
 
 type UserProps = {
@@ -79,18 +83,17 @@ function Users({ users }: UsersProps) {
   );
 }
 
-type UserLocationsRolesProps = {
+type AddUserLocationsRolesProps = {
   user: IUser;
   locations: ILocation[];
   roles: IRole[];
-  editingEnabled: boolean;
 };
 
-function UserLocationsRoles({
+function AddUserLocationsRoles({
   user,
   locations,
   roles,
-}: UserLocationsRolesProps) {
+}: AddUserLocationsRolesProps) {
   type ILocationRoles = {
     location: ILocation;
     roles: IRole[];
@@ -110,7 +113,7 @@ function UserLocationsRoles({
       `${pluralize(selectedRoles.length, "role")} in ${pluralize(
         selectedLocations.length,
         "location"
-      )}.`
+      )}`
     );
 
     user.location_roles = locationRoles;
@@ -152,4 +155,25 @@ function UserLocationsRoles({
   );
 }
 
-export { Users, UserLocationsRoles };
+type ViewUserLocationsRolesProps = {
+  user: IUser;
+};
+
+function ViewUserLocationsRoles({ user }: ViewUserLocationsRolesProps) {
+  const locations = user.location_roles.map((lr) => (
+    <ListItem key={`loc_${lr.location.id}`}>
+      {lr.location.name}
+      <UnorderedList pb={4}>
+        {lr.roles.map((role) => (
+          <ListItem key={`role_${lr.location.id}_${role.id}`}>
+            <Role role={role} />
+          </ListItem>
+        ))}
+      </UnorderedList>
+    </ListItem>
+  ));
+
+  return <UnorderedList>{locations}</UnorderedList>;
+}
+
+export { Users, AddUserLocationsRoles, ViewUserLocationsRoles };

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, SyntheticEvent } from "react";
 import {
   Box,
   Circle,
@@ -13,20 +13,11 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { SearchIcon } from "@chakra-ui/icons";
-import styles from "./Checkbox.module.css";
+import { Checkbox } from "./Checkbox";
 
 type Item = {
   id: number;
   name: string;
-};
-
-type CheckboxProps = {
-  id: string;
-  checked: boolean;
-  onChange: any;
-  children: any;
-  disabled?: boolean;
-  style?: any;
 };
 
 type MultiSelectProps = {
@@ -35,21 +26,11 @@ type MultiSelectProps = {
   onSelect?(items: Item[]): void;
 };
 
-function Checkbox(props: CheckboxProps) {
-  return (
-    <label htmlFor={props.id} className={styles.checkbox} style={props.style}>
-      <input
-        id={props.id}
-        type="checkbox"
-        checked={props.checked}
-        disabled={props.disabled || false}
-        onChange={props.onChange}
-      />
-      {props.children}
-    </label>
-  );
-}
 function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
+  type ICheckboxStates = {
+    [index: number]: boolean;
+  };
+
   /*
    * Wrapper for onSelect. If onSelect is undefined, assign a noop function
    * so that we don't have to repeat this check everywhere the function is used.
@@ -62,19 +43,19 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
         };
 
   /*
-   * Wrapper for setState function and any additonal side effects that when
-   * an item is selected.
+   * Wrapper for setState function and any additonal side effects that happend
+   * when an item is selected.
    */
-  const toggleIndex = (
-    array: boolean[],
-    index: number,
+  const toggleCheckbox = (
+    states: ICheckboxStates,
+    id: number,
     value: boolean,
     setMethod: any
   ) => {
-    const arrayClone = [...array];
-    arrayClone[index] = value;
-    setMethod(arrayClone);
-    _onSelect(items.filter((item, i) => arrayClone[i]));
+    const statesClone = Object.assign({}, states);
+    statesClone[id] = value;
+    setMethod(statesClone);
+    _onSelect(items.filter((item) => statesClone[item.id]));
   };
 
   const empty = (
@@ -93,42 +74,52 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
   );
 
   const [filteredItems, setFilteredItems] = useState(items);
-  const filterItems = (e: any) => {
-    const keyword = e.target.value.toLowerCase();
+
+  const filterItems = (e: SyntheticEvent) => {
+    const target = e.target as HTMLInputElement;
+    const keyword = target.value.toLowerCase();
     if (keyword.length > 0) {
       const results = items.filter(
         (item) => item.name.toLowerCase().indexOf(keyword) > -1
       );
-      setFilteredItems(results);
+      if (results.length > 0) {
+        setFilteredItems(results);
+      } else {
+        setFilteredItems([]);
+      }
     } else {
       setFilteredItems(items);
     }
   };
 
-  const itemsDefaultState = Array.from(
-    { length: items.length },
-    (_, i) => false
+  const itemsDefaultState: ICheckboxStates = items.reduce(
+    (obj, item) => Object.assign(obj, { [item.id]: false }),
+    {}
   );
+
   const [checkedItems, setCheckedItems] = useState(itemsDefaultState);
-  const allItemsChecked = checkedItems.every(Boolean);
+
+  const allItemsChecked = Object.values(checkedItems).every(Boolean);
+
   const renderedItems =
     items.length > 0
       ? filteredItems.length > 0
-        ? filteredItems.map((item: Item, i: number) => {
+        ? filteredItems.map((item: Item) => {
             const key = `${title}_item_${item.id}`;
             return (
               <Checkbox
                 key={key}
                 id={`${title}_item_${item.id}`}
-                checked={checkedItems[i]}
-                onChange={(e: any) =>
-                  toggleIndex(
+                checked={checkedItems[item.id]}
+                onChange={(e: SyntheticEvent) => {
+                  const target = e.target as HTMLInputElement;
+                  toggleCheckbox(
                     checkedItems,
-                    i,
-                    e.target.checked,
+                    item.id,
+                    target.checked,
                     setCheckedItems
-                  )
-                }
+                  );
+                }}
               >
                 {item.name}
               </Checkbox>
@@ -145,11 +136,16 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
           <Checkbox
             id={`chk_${title}`}
             checked={allItemsChecked}
-            onChange={(e: any) => {
+            onChange={(e: SyntheticEvent) => {
+              const target = e.target as HTMLInputElement;
               setCheckedItems(
-                Array.from({ length: items.length }, (_, i) => e.target.checked)
+                items.reduce(
+                  (obj, item) =>
+                    Object.assign(obj, { [item.id]: target.checked }),
+                  {}
+                )
               );
-              e.target.checked ? _onSelect(items) : _onSelect([]);
+              target.checked ? _onSelect(items) : _onSelect([]);
             }}
           >
             Select All {title}

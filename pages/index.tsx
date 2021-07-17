@@ -5,7 +5,11 @@ import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
 import type { IRole } from "../types/roles";
 import type { IUser, ILocation } from "../types/users";
 import type { IPermissionDict } from "../types/permissions";
-import { Users, UserLocationsRoles } from "../components/Users";
+import {
+  Users,
+  AddUserLocationsRoles,
+  ViewUserLocationsRoles,
+} from "../components/Users";
 import { Roles } from "../components/Roles";
 import { Permissions } from "../components/Permissions";
 
@@ -37,9 +41,14 @@ export default function Index({
   //   name: Math.random().toString(36).substring(2),
   //   permissions: [],
   // }));
+  const _view_user_locations_roles = <ViewUserLocationsRoles user={users[2]} />;
 
-  const _user_locations_roles = (
-    <UserLocationsRoles user={users[2]} locations={locations} roles={roles} />
+  const _add_user_locations_roles = (
+    <AddUserLocationsRoles
+      user={users[2]}
+      locations={locations}
+      roles={roles}
+    />
   );
 
   return (
@@ -53,13 +62,15 @@ export default function Index({
           <Tab>Users</Tab>
           <Tab>Roles</Tab>
           <Tab>Permissions</Tab>
+          <Tab>View User Roles</Tab>
           <Tab>Add User Roles</Tab>
         </TabList>
         <TabPanels>
           <TabPanel>{_users}</TabPanel>
           <TabPanel>{_roles}</TabPanel>
           <TabPanel>{_permissions}</TabPanel>
-          <TabPanel>{_user_locations_roles}</TabPanel>
+          <TabPanel>{_view_user_locations_roles}</TabPanel>
+          <TabPanel>{_add_user_locations_roles}</TabPanel>
         </TabPanels>
       </Tabs>
     </>
