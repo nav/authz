@@ -5,28 +5,23 @@ import {
   Divider,
   Heading,
   HStack,
-  Input,
-  InputGroup,
-  InputRightElement,
-  Link,
   Spacer,
   VStack,
 } from "@chakra-ui/react";
-import { SearchIcon } from "@chakra-ui/icons";
+import { FixedSizeList } from "react-window";
+
 import { Checkbox } from "./Checkbox";
+import { Filter } from "./Filter";
 
-type Item = {
-  id: number;
-  name: string;
-};
+type IItem = Record<string, any>;
 
-type MultiSelectProps = {
+type IMultiSelect = {
   title: string;
-  items: Item[];
-  onSelect?(items: Item[]): void;
+  items: IItem[];
+  onSelect?(items: IItem[]): void;
 };
 
-function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
+function MultiSelect({ title, items, onSelect }: IMultiSelect) {
   type ICheckboxStates = {
     [index: number]: boolean;
   };
@@ -75,23 +70,6 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
 
   const [filteredItems, setFilteredItems] = useState(items);
 
-  const filterItems = (e: SyntheticEvent) => {
-    const target = e.target as HTMLInputElement;
-    const keyword = target.value.toLowerCase();
-    if (keyword.length > 0) {
-      const results = items.filter(
-        (item) => item.name.toLowerCase().indexOf(keyword) > -1
-      );
-      if (results.length > 0) {
-        setFilteredItems(results);
-      } else {
-        setFilteredItems([]);
-      }
-    } else {
-      setFilteredItems(items);
-    }
-  };
-
   const itemsDefaultState: ICheckboxStates = items.reduce(
     (obj, item) => Object.assign(obj, { [item.id]: false }),
     {}
@@ -99,34 +77,49 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
 
   const [checkedItems, setCheckedItems] = useState(itemsDefaultState);
 
-  const allItemsChecked = Object.values(checkedItems).every(Boolean);
+  const allItemsChecked =
+    Object.keys(checkedItems).length > 0
+      ? Object.values(checkedItems).every(Boolean)
+      : false;
 
-  const renderedItems =
-    items.length > 0
-      ? filteredItems.length > 0
-        ? filteredItems.map((item: Item) => {
-            const key = `${title}_item_${item.id}`;
-            return (
-              <Checkbox
-                key={key}
-                id={`${title}_item_${item.id}`}
-                checked={checkedItems[item.id]}
-                onChange={(e: SyntheticEvent) => {
-                  const target = e.target as HTMLInputElement;
-                  toggleCheckbox(
-                    checkedItems,
-                    item.id,
-                    target.checked,
-                    setCheckedItems
-                  );
-                }}
-              >
-                {item.name}
-              </Checkbox>
+  const Row = ({ index, style }: any) => {
+    const item = filteredItems[index];
+    const key = `${title}_item_${item.id}`;
+    return (
+      <div style={style}>
+        <Checkbox
+          key={key}
+          id={`${title}_item_${item.id}`}
+          checked={checkedItems[item.id]}
+          onChange={(e: SyntheticEvent) => {
+            const target = e.target as HTMLInputElement;
+            toggleCheckbox(
+              checkedItems,
+              item.id,
+              target.checked,
+              setCheckedItems
             );
-          })
-        : empty
-      : empty;
+          }}
+        >
+          {item.name}
+        </Checkbox>
+      </div>
+    );
+  };
+
+  const itemList =
+    filteredItems.length > 0 ? (
+      <FixedSizeList
+        height={500}
+        width="100%"
+        itemCount={filteredItems.length}
+        itemSize={35}
+      >
+        {Row}
+      </FixedSizeList>
+    ) : (
+      empty
+    );
 
   return (
     <VStack align="flex-start" w="full">
@@ -139,28 +132,30 @@ function MultiSelect({ title, items, onSelect }: MultiSelectProps) {
             onChange={(e: SyntheticEvent) => {
               const target = e.target as HTMLInputElement;
               setCheckedItems(
-                items.reduce(
+                filteredItems.reduce(
                   (obj, item) =>
                     Object.assign(obj, { [item.id]: target.checked }),
                   {}
                 )
               );
-              target.checked ? _onSelect(items) : _onSelect([]);
+              target.checked ? _onSelect(filteredItems) : _onSelect([]);
             }}
           >
             Select All {title}
           </Checkbox>
         </VStack>
         <Spacer />
-        <InputGroup size="sm" w="50%" alignSelf="flex-end">
-          <InputRightElement pointerEvents="none">
-            <SearchIcon color="gray.500" />
-          </InputRightElement>
-          <Input placeholder={`Search ${title}`} onChange={filterItems} />
-        </InputGroup>
+        <Filter
+          title={title}
+          items={items}
+          filterKey="name"
+          onFilter={(_filteredItems) => setFilteredItems(_filteredItems)}
+        />
       </HStack>
+
       <Divider />
-      {renderedItems}
+
+      {itemList}
     </VStack>
   );
 }

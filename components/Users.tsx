@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import {
   Avatar,
   Box,
+  Button,
   Divider,
-  Heading,
   HStack,
   Link,
   ListItem,
@@ -23,20 +23,23 @@ import type { IRole } from "../types/roles";
 import type { ILocation, IUser } from "../types/users";
 import { Role } from "./Roles";
 import { MultiSelect } from "./MultiSelect";
-import { Checkbox } from "./Checkbox";
 import { pluralize } from "../lib/utils";
 
-type UserProps = {
+type IUserProps = {
   user: IUser;
+  locations: ILocation[];
+  roles: IRole[];
+  onViewRoles(title: string, body: any, footer: any): void;
+  onAddRoles(tilte: string, body: any, footer: any): void;
 };
 
-function User({ user }: UserProps) {
+function User({ user, locations, roles, onViewRoles, onAddRoles }: IUserProps) {
   const noLocations = user.location_roles.length;
   const noRoles = user.location_roles.reduce(
     (count, loc_rol) => count + loc_rol.roles.length,
     0
   );
-  const roles =
+  const _roles =
     noRoles === 0 && noLocations === 0
       ? "No roles assigned"
       : `${noRoles} roles in ${noLocations} locations`;
@@ -52,19 +55,32 @@ function User({ user }: UserProps) {
       <Td>{user.email}</Td>
       <Td>{user.position}</Td>
       <Td>
-        <NextLink href="/">
-          <Link>{roles}</Link>
-        </NextLink>
+        <Link
+          onClick={() =>
+            onViewRoles(
+              "Roles",
+              <ViewUserLocationsRoles
+                user={user}
+                locations={locations}
+                roles={roles}
+                onAddRoles={onAddRoles}
+              />,
+              <div>Hello</div>
+            )
+          }
+        >
+          {_roles}
+        </Link>
       </Td>
     </Tr>
   );
 }
 
-type UsersProps = {
+type IUsers = {
   users: IUser[];
 };
 
-function Users({ users }: UsersProps) {
+function Users({ users }: IUsers) {
   const _users = users.map((user: IUser) => <User key={user.id} user={user} />);
 
   return (
@@ -83,7 +99,7 @@ function Users({ users }: UsersProps) {
   );
 }
 
-type AddUserLocationsRolesProps = {
+type IAddUserLocationsRoles = {
   user: IUser;
   locations: ILocation[];
   roles: IRole[];
@@ -93,11 +109,12 @@ function AddUserLocationsRoles({
   user,
   locations,
   roles,
-}: AddUserLocationsRolesProps) {
+}: IAddUserLocationsRoles) {
   type ILocationRoles = {
     location: ILocation;
     roles: IRole[];
   };
+
   const [selectionSummary, setSelectionSummary] = useState("");
   const [selectedLocations, setSelectedLocations] = useState<ILocation[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<IRole[]>([]);
@@ -116,8 +133,8 @@ function AddUserLocationsRoles({
       )}`
     );
 
-    user.location_roles = locationRoles;
-  }, [selectedLocations, selectedRoles]);
+    user.location_roles = _locationRoles;
+  }, [user, selectedLocations, selectedRoles]);
 
   const rolesMultiSelect =
     selectedLocations.length > 0 ? (
@@ -130,9 +147,6 @@ function AddUserLocationsRoles({
 
   return (
     <VStack spacing={3}>
-      <Heading size="md">
-        {user.first_name} {user.last_name}
-      </Heading>
       <Text>{selectionSummary}</Text>
       <Divider />
       <HStack w="full" align="flex-start">
@@ -155,12 +169,20 @@ function AddUserLocationsRoles({
   );
 }
 
-type ViewUserLocationsRolesProps = {
+type IViewUserLocationsRoles = {
   user: IUser;
+  locations: ILocation[];
+  roles: IRole[];
+  onAddRoles(title: string, body: any, footer: any): void;
 };
 
-function ViewUserLocationsRoles({ user }: ViewUserLocationsRolesProps) {
-  const locations = user.location_roles.map((lr) => (
+function ViewUserLocationsRoles({
+  user,
+  locations,
+  roles,
+  onAddRoles,
+}: IViewUserLocationsRoles) {
+  const _locations = user.location_roles.map((lr) => (
     <ListItem key={`loc_${lr.location.id}`}>
       {lr.location.name}
       <UnorderedList pb={4}>
@@ -173,7 +195,26 @@ function ViewUserLocationsRoles({ user }: ViewUserLocationsRolesProps) {
     </ListItem>
   ));
 
-  return <UnorderedList>{locations}</UnorderedList>;
+  return (
+    <Box>
+      <Button
+        onClick={() =>
+          onAddRoles(
+            "Add Roles",
+            <AddUserLocationsRoles
+              user={user}
+              locations={locations}
+              roles={roles}
+            />,
+            <div>Bye</div>
+          )
+        }
+      >
+        Add Roles
+      </Button>
+      <UnorderedList>{_locations}</UnorderedList>
+    </Box>
+  );
 }
 
 export { Users, AddUserLocationsRoles, ViewUserLocationsRoles };

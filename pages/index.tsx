@@ -1,15 +1,27 @@
 import Head from "next/head";
 import { GetServerSideProps } from "next";
-import { Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { useState } from "react";
+import {
+  Button,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  useDisclosure,
+} from "@chakra-ui/react";
 
 import type { IRole } from "../types/roles";
 import type { IUser, ILocation } from "../types/users";
 import type { IPermissionDict } from "../types/permissions";
-import {
-  Users,
-  AddUserLocationsRoles,
-  ViewUserLocationsRoles,
-} from "../components/Users";
+import { Users } from "../components/Users";
 import { Roles } from "../components/Roles";
 import { Permissions } from "../components/Permissions";
 
@@ -26,12 +38,13 @@ export default function Index({
   permissions,
   locations,
 }: IndexProps) {
-  const _roles = <Roles roles={roles} />;
-  const _users = <Users users={users} />;
-  const _permissions = <Permissions permissions={permissions} />;
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [drawerTitle, setDrawerTitle] = useState("");
+  const [drawerContent, setDrawerContent] = useState("");
+  const [drawerFooter, setDrawerFooter] = useState("");
 
   // // Fake locations and roles
-  // const fakeLocations = Array.from({ length: 3000 }, (_, i) => ({
+  // const fakeLocations = Array.from({ length: 10000 }, (_, i) => ({
   //   id: i,
   //   name: Math.random().toString(36).substring(2),
   //   departments: [],
@@ -41,15 +54,27 @@ export default function Index({
   //   name: Math.random().toString(36).substring(2),
   //   permissions: [],
   // }));
-  const _view_user_locations_roles = <ViewUserLocationsRoles user={users[2]} />;
 
-  const _add_user_locations_roles = (
-    <AddUserLocationsRoles
-      user={users[2]}
+  const _roles = <Roles roles={roles} />;
+  const _users = (
+    <Users
+      users={users}
       locations={locations}
       roles={roles}
+      onViewRoles={(title, body, footer) => {
+        setDrawerTitle(title);
+        setDrawerContent(body);
+        setDrawerFooter(footer);
+        onOpen();
+      }}
+      onAddRoles={(title, body, footer) => {
+        setDrawerTitle(title);
+        setDrawerContent(body);
+        setDrawerFooter(footer);
+      }}
     />
   );
+  const _permissions = <Permissions permissions={permissions} />;
 
   return (
     <>
@@ -62,23 +87,35 @@ export default function Index({
           <Tab>Users</Tab>
           <Tab>Roles</Tab>
           <Tab>Permissions</Tab>
-          <Tab>View User Roles</Tab>
-          <Tab>Add User Roles</Tab>
         </TabList>
         <TabPanels>
           <TabPanel>{_users}</TabPanel>
           <TabPanel>{_roles}</TabPanel>
           <TabPanel>{_permissions}</TabPanel>
-          <TabPanel>{_view_user_locations_roles}</TabPanel>
-          <TabPanel>{_add_user_locations_roles}</TabPanel>
         </TabPanels>
       </Tabs>
+
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader>{drawerTitle}</DrawerHeader>
+          <DrawerBody>{drawerContent}</DrawerBody>
+          <DrawerFooter>{drawerFooter}</DrawerFooter>
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const users_res = await fetch("http://localhost:3001/api/users");
+  const headers = {
+    Authorization: `Token ${process.env.ACCESS_TOKEN}`,
+  };
+
+  const users_res = await fetch("http://localhost:3001/api/users", {
+    headers: headers,
+  });
   const users_json: any = await users_res.json();
 
   const roles_res = await fetch("http://localhost:3001/api/roles");
