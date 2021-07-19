@@ -1,13 +1,24 @@
 import NextLink from "next/link";
-import { useState, useEffect } from "react";
+import * as React from "react";
 import {
   Avatar,
   Box,
   Button,
   Divider,
+  Drawer,
+  DrawerBody,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
   HStack,
   Link,
-  ListItem,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
   Table,
   Thead,
   Tbody,
@@ -15,34 +26,149 @@ import {
   Th,
   Td,
   Text,
-  UnorderedList,
   VStack,
+  useDisclosure,
 } from "@chakra-ui/react";
 
 import type { IRole } from "../types/roles";
-import type { ILocation, IUser } from "../types/users";
+import type { ILocation } from "../types/locations";
+import type { IUser } from "../types/users";
 import { Role } from "./Roles";
 import { MultiSelect } from "./MultiSelect";
 import { pluralize } from "../lib/utils";
+import { Card } from "./Card/Card";
+import { CardContent } from "./Card/CardContent";
+import { CardHeader } from "./Card/CardHeader";
+import { Property } from "./Card/Property";
 
-type IUserProps = {
+type IUserDetail = {
   user: IUser;
   locations: ILocation[];
   roles: IRole[];
-  onViewRoles(title: string, body: any, footer: any): void;
-  onAddRoles(tilte: string, body: any, footer: any): void;
 };
 
-function User({ user, locations, roles, onViewRoles, onAddRoles }: IUserProps) {
-  const noLocations = user.location_roles.length;
-  const noRoles = user.location_roles.reduce(
-    (count, loc_rol) => count + loc_rol.roles.length,
-    0
+type ILocationRoles = {
+  location: ILocation;
+  roles: IRole[];
+};
+
+function UserDetail({ user, locations, roles }: IUserDetail) {
+  const {
+    isOpen: isAddRolesOpen,
+    onOpen: onAddRolesOpen,
+    onClose: onAddRolesClose,
+  } = useDisclosure();
+
+  const [locationRolesToBeAdded, setLocationRolesToBeAdded] = React.useState<
+    ILocationRoles[]
+  >([]);
+
+  const addRolesDrawer = (
+    <Drawer isOpen={isAddRolesOpen} onClose={onAddRolesClose} size="lg">
+      <DrawerContent>
+        <DrawerCloseButton />
+        <DrawerHeader>Add Roles</DrawerHeader>
+        <DrawerBody>
+          <AddUserLocationsRoles
+            user={user}
+            locations={locations}
+            roles={roles}
+            onAdd={(locationRoles: ILocationRoles[]) =>
+              setLocationRolesToBeAdded(locationRoles)
+            }
+          />
+        </DrawerBody>
+        <DrawerFooter>
+          <Button variant="outline" mr={3} onClick={onAddRolesClose}>
+            Cancel
+          </Button>
+          <Button
+            colorScheme="blue"
+            onClick={() => {
+              // TODO(nav): Merge new roles with existing
+              user.location_roles = locationRolesToBeAdded;
+              onAddRolesClose();
+            }}
+          >
+            Save
+          </Button>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
+
+  return (
+    <>
+      {addRolesDrawer}
+      <Tabs>
+        <TabList>
+          <Tab>Profile</Tab>
+          <Tab>Roles</Tab>
+        </TabList>
+        <TabPanels>
+          <TabPanel>
+            <Box as="section" py="12" px={{ md: "8" }}>
+              <Card maxW="3xl" mx="auto">
+                <CardHeader
+                  title="Account Info"
+                  action={
+                    <Button variant="outline" minW="20">
+                      Edit
+                    </Button>
+                  }
+                />
+                <CardContent>
+                  <Property
+                    label="Name"
+                    value={user.first_name + " " + user.last_name}
+                  />
+                  <Property label="Email" value={user.email} />
+                  <Property label="Position" value={user.position} />
+                </CardContent>
+              </Card>
+            </Box>
+          </TabPanel>
+
+          <TabPanel>
+            <Box as="section" py="12" px={{ md: "8" }}>
+              <Card maxW="3xl" mx="auto">
+                <CardHeader
+                  title="Roles"
+                  action={
+                    <>
+                      <Button variant="outline" minW="20">
+                        Edit
+                      </Button>
+                      <Button onClick={onAddRolesOpen}>Add Roles</Button>
+                    </>
+                  }
+                />
+                <CardContent>
+                  <ViewUserLocationsRoles user={user} />
+                </CardContent>
+              </Card>
+            </Box>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
+    </>
+  );
+}
+
+type IUserRow = {
+  user: IUser;
+};
+
+function UserRow({ user }: IUserRow) {
+  const locationRoles = user.location_roles;
+  const allRoles: IRole[] = [];
+  locationRoles.map((lr) => allRoles.push(...lr.roles));
+  const roles = new Set<IRole>(allRoles);
+
   const _roles =
-    noRoles === 0 && noLocations === 0
+    roles.size === 0 && locationRoles.length === 0
       ? "No roles assigned"
-      : `${noRoles} roles in ${noLocations} locations`;
+      : `${roles.size} roles in ${locationRoles.length} locations`;
 
   return (
     <Tr>
@@ -50,28 +176,15 @@ function User({ user, locations, roles, onViewRoles, onAddRoles }: IUserProps) {
         <Avatar name={user.first_name + " " + user.last_name} size="sm" />
       </Td>
       <Td>
-        {user.first_name} {user.last_name}
+        <NextLink href={`/settings/iam/users/${user.id}`} passHref>
+          <Link>
+            {user.first_name} {user.last_name}
+          </Link>
+        </NextLink>
       </Td>
       <Td>{user.email}</Td>
       <Td>{user.position}</Td>
-      <Td>
-        <Link
-          onClick={() =>
-            onViewRoles(
-              "Roles",
-              <ViewUserLocationsRoles
-                user={user}
-                locations={locations}
-                roles={roles}
-                onAddRoles={onAddRoles}
-              />,
-              <div>Hello</div>
-            )
-          }
-        >
-          {_roles}
-        </Link>
-      </Td>
+      <Td>{_roles}</Td>
     </Tr>
   );
 }
@@ -81,7 +194,9 @@ type IUsers = {
 };
 
 function Users({ users }: IUsers) {
-  const _users = users.map((user: IUser) => <User key={user.id} user={user} />);
+  const _users = users.map((user: IUser) => (
+    <UserRow key={user.id} user={user} />
+  ));
 
   return (
     <Table variant="simple" size="sm">
@@ -98,57 +213,52 @@ function Users({ users }: IUsers) {
     </Table>
   );
 }
-
 type IAddUserLocationsRoles = {
   user: IUser;
   locations: ILocation[];
   roles: IRole[];
+  onAdd: (locationRoles: ILocationRoles[]) => void;
 };
 
 function AddUserLocationsRoles({
   user,
   locations,
   roles,
+  onAdd,
 }: IAddUserLocationsRoles) {
-  type ILocationRoles = {
-    location: ILocation;
-    roles: IRole[];
-  };
+  const [selectionSummary, setSelectionSummary] = React.useState("");
+  const [selectedLocations, setSelectedLocations] = React.useState<ILocation[]>(
+    []
+  );
+  const [selectedRoles, setSelectedRoles] = React.useState<IRole[]>([]);
 
-  const [selectionSummary, setSelectionSummary] = useState("");
-  const [selectedLocations, setSelectedLocations] = useState<ILocation[]>([]);
-  const [selectedRoles, setSelectedRoles] = useState<IRole[]>([]);
-  const [locationRoles, setLocationRoles] = useState<ILocationRoles[]>([]);
-
-  useEffect(() => {
+  React.useEffect(() => {
     const _locationRoles: ILocationRoles[] = [];
     selectedLocations.forEach((location: ILocation) =>
       _locationRoles.push({ location: location, roles: selectedRoles })
     );
-    setLocationRoles(_locationRoles);
+    onAdd(_locationRoles);
     setSelectionSummary(
       `${pluralize(selectedRoles.length, "role")} in ${pluralize(
         selectedLocations.length,
         "location"
       )}`
     );
+  }, [selectedLocations, selectedRoles]);
 
-    user.location_roles = _locationRoles;
-  }, [user, selectedLocations, selectedRoles]);
-
-  const rolesMultiSelect =
-    selectedLocations.length > 0 ? (
-      <MultiSelect
-        title="Roles"
-        items={roles}
-        onSelect={(roles: IRole[]) => setSelectedRoles(roles)}
-      />
-    ) : null;
+  const isLocationRolesMultiSelectDisabled = selectedLocations.length === 0;
 
   return (
     <VStack spacing={3}>
-      <Text>{selectionSummary}</Text>
-      <Divider />
+      <Text
+        w="full"
+        py={2}
+        borderBottom="1px"
+        borderColor="var(--chakra-colors-gray-200);"
+        textAlign="center"
+      >
+        {selectionSummary}
+      </Text>
       <HStack w="full" align="flex-start">
         <Box w="49%">
           <MultiSelect
@@ -163,7 +273,14 @@ function AddUserLocationsRoles({
           />
         </Box>
         <Divider orientation="vertical" />
-        <Box w="49%">{rolesMultiSelect}</Box>
+        <Box w="49%">
+          <MultiSelect
+            title="Roles"
+            items={roles}
+            isDisabled={isLocationRolesMultiSelectDisabled}
+            onSelect={(roles: IRole[]) => setSelectedRoles(roles)}
+          />
+        </Box>
       </HStack>
     </VStack>
   );
@@ -171,50 +288,17 @@ function AddUserLocationsRoles({
 
 type IViewUserLocationsRoles = {
   user: IUser;
-  locations: ILocation[];
-  roles: IRole[];
-  onAddRoles(title: string, body: any, footer: any): void;
 };
 
-function ViewUserLocationsRoles({
-  user,
-  locations,
-  roles,
-  onAddRoles,
-}: IViewUserLocationsRoles) {
-  const _locations = user.location_roles.map((lr) => (
-    <ListItem key={`loc_${lr.location.id}`}>
-      {lr.location.name}
-      <UnorderedList pb={4}>
-        {lr.roles.map((role) => (
-          <ListItem key={`role_${lr.location.id}_${role.id}`}>
-            <Role role={role} />
-          </ListItem>
-        ))}
-      </UnorderedList>
-    </ListItem>
+function ViewUserLocationsRoles({ user }: IViewUserLocationsRoles) {
+  const locations = user.location_roles.map((lr) => (
+    <Property
+      key={`loc_${lr.location.id}`}
+      label={lr.location.name}
+      value="Roles"
+    />
   ));
-
-  return (
-    <Box>
-      <Button
-        onClick={() =>
-          onAddRoles(
-            "Add Roles",
-            <AddUserLocationsRoles
-              user={user}
-              locations={locations}
-              roles={roles}
-            />,
-            <div>Bye</div>
-          )
-        }
-      >
-        Add Roles
-      </Button>
-      <UnorderedList>{_locations}</UnorderedList>
-    </Box>
-  );
+  return locations;
 }
 
-export { Users, AddUserLocationsRoles, ViewUserLocationsRoles };
+export { Users, UserDetail, AddUserLocationsRoles, ViewUserLocationsRoles };

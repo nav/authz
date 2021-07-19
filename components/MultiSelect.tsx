@@ -18,10 +18,11 @@ type IItem = Record<string, any>;
 type IMultiSelect = {
   title: string;
   items: IItem[];
+  isDisabled: boolean;
   onSelect?(items: IItem[]): void;
 };
 
-function MultiSelect({ title, items, onSelect }: IMultiSelect) {
+function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
   type ICheckboxStates = {
     [index: number]: boolean;
   };
@@ -90,6 +91,7 @@ function MultiSelect({ title, items, onSelect }: IMultiSelect) {
         <Checkbox
           key={key}
           id={`${title}_item_${item.id}`}
+          disabled={isDisabled}
           checked={checkedItems[item.id]}
           onChange={(e: SyntheticEvent) => {
             const target = e.target as HTMLInputElement;
@@ -129,6 +131,7 @@ function MultiSelect({ title, items, onSelect }: IMultiSelect) {
           <Checkbox
             id={`chk_${title}`}
             checked={allItemsChecked}
+            disabled={isDisabled}
             onChange={(e: SyntheticEvent) => {
               const target = e.target as HTMLInputElement;
               setCheckedItems(
@@ -141,7 +144,7 @@ function MultiSelect({ title, items, onSelect }: IMultiSelect) {
               target.checked ? _onSelect(filteredItems) : _onSelect([]);
             }}
           >
-            Select All {title}
+            All {title}
           </Checkbox>
         </VStack>
         <Spacer />

@@ -3,11 +3,11 @@ import { definitions } from "../../../../config";
 import type { IUser } from "../../../../types/users";
 import { Users } from "../../../../components/Users";
 
-type IProps = {
+type IUsersPage = {
   users: IUser[];
 };
 
-export default function UsersPage({ users }: IProps) {
+export default function UsersPage({ users }: IUsersPage) {
   return <Users users={users} />;
 }
 

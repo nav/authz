@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { GetServerSideProps } from "next";
-import { useState } from "react";
+import * as React from "react";
 import {
   Button,
   Drawer,
@@ -39,9 +39,9 @@ export default function Index({
   locations,
 }: IndexProps) {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [drawerTitle, setDrawerTitle] = useState("");
-  const [drawerContent, setDrawerContent] = useState("");
-  const [drawerFooter, setDrawerFooter] = useState("");
+  const [drawerTitle, setDrawerTitle] = React.useState("");
+  const [drawerContent, setDrawerContent] = React.useState("");
+  const [drawerFooter, setDrawerFooter] = React.useState("");
 
   // // Fake locations and roles
   // const fakeLocations = Array.from({ length: 10000 }, (_, i) => ({
