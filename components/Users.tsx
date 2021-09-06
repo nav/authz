@@ -9,7 +9,6 @@ import {
   DrawerBody,
   DrawerFooter,
   DrawerHeader,
-  DrawerOverlay,
   DrawerContent,
   DrawerCloseButton,
   HStack,
@@ -34,6 +33,7 @@ import type { IRole } from "../types/roles";
 import type { ILocation } from "../types/locations";
 import type { IUser } from "../types/users";
 import { Role } from "./Roles";
+import { Checkbox } from "./Checkbox";
 import { MultiSelect } from "./MultiSelect";
 import { pluralize } from "../lib/utils";
 import { Card } from "./Card/Card";
@@ -52,12 +52,101 @@ type ILocationRoles = {
   roles: IRole[];
 };
 
+/**
+ * Convert LocationRoles to a map containing ids for easy manipulation.
+ *
+ * @param {ILocationRoles[]} locationRoles  Location roles to be convered
+ * @return {[id: number]: number[]}
+ */
+const locationRolesToMap = (locationRoles: ILocationRoles[]) => {
+  const map: { [id: number]: number[] } = {};
+  locationRoles.forEach((lr) => {
+    map[lr.location.id] = lr.roles.map((r) => r.id);
+  });
+  return map;
+};
+
+/**
+ * Convert a map containing location and role ids to array of location roles.
+ * @param {ILocation[]} locations   Source array of locations.
+ * @param {IRole[]}     roles       Source array of roles.
+ * @param {[id: number]: number[]}  Map of location id and role ids.
+ * @return {ILocationRoles[]}
+ */
+const mapToLocationRoles = (
+  locations: ILocation[],
+  roles: IRole[],
+  locationRolesMap: { [id: number]: number[] }
+) => {
+  const locationsMap: { [id: number]: ILocation } = {};
+  locations.map((l) => (locationsMap[l.id] = l));
+
+  const rolesMap: { [id: number]: IRole } = {};
+  roles.map((r) => (rolesMap[r.id] = r));
+
+  const locationRoles = [];
+  for (const locationId in locationRolesMap) {
+    const roles = locationRolesMap[locationId];
+    roles.sort();
+    if (roles.length > 0) {
+      locationRoles.push({
+        location: locationsMap[locationId],
+        roles: locationRolesMap[locationId].map((roleId) => rolesMap[roleId]),
+      });
+    }
+  }
+
+  return locationRoles;
+};
+
+/**
+ * Merge the existing and new roles. Merge process is additive and does not
+ * remove existing roles.
+ *
+ * @param  {ILocationRoles[]} existingLocationRoles User's existing location roles.
+ * @param  {ILocationRoles[]} newLocationRoles      New roles being added to user.
+ * @return {[id: number]: number[]}
+ */
+const mergeRoles = (
+  existingLocationRoles: ILocationRoles[],
+  newLocationRoles: ILocationRoles[]
+) => {
+  const existingLocationRolesMap = locationRolesToMap(existingLocationRoles);
+  const newLocationRolesMap = locationRolesToMap(newLocationRoles);
+
+  for (const locationId in existingLocationRolesMap) {
+    if (locationId in newLocationRolesMap) {
+      const roleSet = new Set(existingLocationRolesMap[locationId]);
+      newLocationRolesMap[locationId].map((rid) => roleSet.add(rid));
+      delete newLocationRolesMap[locationId];
+      existingLocationRolesMap[locationId] = Array.from(roleSet);
+    }
+  }
+
+  if (Object.keys(newLocationRolesMap).length > 0) {
+    return Object.assign(existingLocationRolesMap, newLocationRolesMap);
+  }
+
+  return existingLocationRolesMap;
+};
+
 function UserDetail({ user, locations, roles }: IUserDetail) {
+  const {
+    isOpen: isEditModeOpen,
+    onOpen: onEditModeOpen,
+    onClose: onEditModeClose,
+  } = useDisclosure();
+
   const {
     isOpen: isAddRolesOpen,
     onOpen: onAddRolesOpen,
     onClose: onAddRolesClose,
   } = useDisclosure();
+
+  const [userState, setUserState] = React.useState<IUser>(user);
+  const [userLocationRolesState, setUserLocationRolesState] = React.useState<
+    ILocationRoles[]
+  >(user.location_roles);
 
   const [locationRolesToBeAdded, setLocationRolesToBeAdded] = React.useState<
     ILocationRoles[]
@@ -70,7 +159,6 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
         <DrawerHeader>Add Roles</DrawerHeader>
         <DrawerBody>
           <AddUserLocationsRoles
-            user={user}
             locations={locations}
             roles={roles}
             onAdd={(locationRoles: ILocationRoles[]) =>
@@ -85,8 +173,11 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
           <Button
             colorScheme="blue"
             onClick={() => {
-              // TODO(nav): Merge new roles with existing
-              user.location_roles = locationRolesToBeAdded;
+              userState.location_roles = mapToLocationRoles(
+                locations,
+                roles,
+                mergeRoles(userState.location_roles, locationRolesToBeAdded)
+              );
               onAddRolesClose();
             }}
           >
@@ -103,27 +194,20 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
       <Tabs>
         <TabList>
           <Tab>Profile</Tab>
-          <Tab>Roles</Tab>
+          <Tab>Location Roles</Tab>
         </TabList>
         <TabPanels>
           <TabPanel>
             <Box as="section" py="12" px={{ md: "8" }}>
               <Card maxW="3xl" mx="auto">
-                <CardHeader
-                  title="Account Info"
-                  action={
-                    <Button variant="outline" minW="20">
-                      Edit
-                    </Button>
-                  }
-                />
+                <CardHeader title="Account Info" action={null} />
                 <CardContent>
                   <Property
                     label="Name"
-                    value={user.first_name + " " + user.last_name}
+                    value={userState.first_name + " " + userState.last_name}
                   />
-                  <Property label="Email" value={user.email} />
-                  <Property label="Position" value={user.position} />
+                  <Property label="Email" value={userState.email} />
+                  <Property label="Position" value={userState.position} />
                 </CardContent>
               </Card>
             </Box>
@@ -133,18 +217,47 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
             <Box as="section" py="12" px={{ md: "8" }}>
               <Card maxW="3xl" mx="auto">
                 <CardHeader
-                  title="Roles"
+                  title="Location Roles"
                   action={
                     <>
-                      <Button variant="outline" minW="20">
-                        Edit
-                      </Button>
+                      {isEditModeOpen ? (
+                        <>
+                          <Button variant="outline" onClick={onEditModeClose}>
+                            Cancel
+                          </Button>{" "}
+                          <Button
+                            onClick={() => {
+                              user.location_roles = userLocationRolesState;
+                              setUserState({ ...user });
+                              onEditModeClose();
+                            }}
+                          >
+                            Save
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={onEditModeOpen}
+                          variant="outline"
+                          minW="20"
+                        >
+                          Edit
+                        </Button>
+                      )}
                       <Button onClick={onAddRolesOpen}>Add Roles</Button>
                     </>
                   }
                 />
                 <CardContent>
-                  <ViewUserLocationsRoles user={user} />
+                  <ViewUserLocationsRoles
+                    user={userState}
+                    locations={locations}
+                    roles={roles}
+                    isEditMode={isEditModeOpen}
+                    onRemove={(locationRoles) => {
+                      setUserLocationRolesState(locationRoles);
+                    }}
+                  />
                 </CardContent>
               </Card>
             </Box>
@@ -213,15 +326,14 @@ function Users({ users }: IUsers) {
     </Table>
   );
 }
+
 type IAddUserLocationsRoles = {
-  user: IUser;
   locations: ILocation[];
   roles: IRole[];
   onAdd: (locationRoles: ILocationRoles[]) => void;
 };
 
 function AddUserLocationsRoles({
-  user,
   locations,
   roles,
   onAdd,
@@ -250,23 +362,14 @@ function AddUserLocationsRoles({
 
   return (
     <VStack spacing={3}>
-      <Text
-        w="full"
-        py={2}
-        borderBottom="1px"
-        borderColor="var(--chakra-colors-gray-200);"
-        textAlign="center"
-      >
-        {selectionSummary}
-      </Text>
       <HStack w="full" align="flex-start">
         <Box w="49%">
           <MultiSelect
             title="Locations"
             items={locations}
-            onSelect={(locations: ILocation[]) => {
-              setSelectedLocations(locations);
-              if (locations.length === 0) {
+            onSelect={(_locations: ILocation[]) => {
+              setSelectedLocations(_locations);
+              if (_locations.length === 0) {
                 setSelectedRoles([]);
               }
             }}
@@ -278,7 +381,7 @@ function AddUserLocationsRoles({
             title="Roles"
             items={roles}
             isDisabled={isLocationRolesMultiSelectDisabled}
-            onSelect={(roles: IRole[]) => setSelectedRoles(roles)}
+            onSelect={(_roles: IRole[]) => setSelectedRoles(_roles)}
           />
         </Box>
       </HStack>
@@ -288,17 +391,69 @@ function AddUserLocationsRoles({
 
 type IViewUserLocationsRoles = {
   user: IUser;
+  locations: ILocation[];
+  roles: IRole[];
+  isEditMode: boolean;
+  onRemove: (locationRoles: ILocationRoles[]) => void;
 };
 
-function ViewUserLocationsRoles({ user }: IViewUserLocationsRoles) {
-  const locations = user.location_roles.map((lr) => (
+function ViewUserLocationsRoles({
+  user,
+  locations,
+  roles,
+  isEditMode,
+  onRemove,
+}: IViewUserLocationsRoles) {
+  const [state, setState] = React.useState<any>({});
+  React.useEffect(() => {
+    setState(locationRolesToMap(user.location_roles));
+  }, [user.location_roles]);
+
+  const render = user.location_roles.map((lr) => (
     <Property
       key={`loc_${lr.location.id}`}
-      label={lr.location.name}
-      value="Roles"
+      label={isEditMode ? <Box>{lr.location.name}</Box> : lr.location.name}
+      value={
+        <HStack spacing={6}>
+          {lr.roles.map((role) =>
+            isEditMode ? (
+              <Box>
+                <Checkbox
+                  key={`lr_${lr.location.id}_${role.id}`}
+                  id={`lr_${lr.location.id}_${role.id}`}
+                  checked={
+                    typeof state[lr.location.id] !== "undefined"
+                      ? state[lr.location.id]?.includes(role.id)
+                      : false
+                  }
+                  onChange={(e: React.SyntheticEvent) => {
+                    const target = e.target as HTMLInputElement;
+                    if (!target.checked) {
+                      state[lr.location.id] = state[lr.location.id].filter(
+                        (r: number) => r != role.id
+                      );
+                    } else {
+                      const roleSet = new Set(state[lr.location.id]);
+                      roleSet.add(role.id);
+                      state[lr.location.id] = Array.from(roleSet);
+                    }
+                    setState({ ...state });
+                    onRemove(mapToLocationRoles(locations, roles, state));
+                  }}
+                >
+                  {role.name}
+                </Checkbox>
+              </Box>
+            ) : (
+              <Box>{role.name}</Box>
+            )
+          )}
+        </HStack>
+      }
     />
   ));
-  return locations;
+
+  return <div>{render}</div>;
 }
 
 export { Users, UserDetail, AddUserLocationsRoles, ViewUserLocationsRoles };

@@ -18,7 +18,7 @@ type IItem = Record<string, any>;
 type IMultiSelect = {
   title: string;
   items: IItem[];
-  isDisabled: boolean;
+  isDisabled?: boolean;
   onSelect?(items: IItem[]): void;
 };
 
@@ -27,6 +27,9 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
     [index: number]: boolean;
   };
 
+  if (typeof isDisabled === "undefined") {
+    isDisabled = false;
+  }
   /*
    * Wrapper for onSelect. If onSelect is undefined, assign a noop function
    * so that we don't have to repeat this check everywhere the function is used.
@@ -92,7 +95,7 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
           key={key}
           id={`${title}_item_${item.id}`}
           disabled={isDisabled}
-          checked={checkedItems[item.id]}
+          checked={!isDisabled && checkedItems[item.id]}
           onChange={(e: SyntheticEvent) => {
             const target = e.target as HTMLInputElement;
             toggleCheckbox(
@@ -130,7 +133,7 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
           <Heading size="sm">{title}</Heading>
           <Checkbox
             id={`chk_${title}`}
-            checked={allItemsChecked}
+            checked={!isDisabled && allItemsChecked}
             disabled={isDisabled}
             onChange={(e: SyntheticEvent) => {
               const target = e.target as HTMLInputElement;

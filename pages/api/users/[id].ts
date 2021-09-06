@@ -23,7 +23,6 @@ export default function handler(
     return;
   }
 
-  console.log(userId);
   const results: IUser[] = users.filter((user: IUser) => user.id === userId);
 
   if (results.length === 0) {

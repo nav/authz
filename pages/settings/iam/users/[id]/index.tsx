@@ -16,7 +16,19 @@ export default function UserDetailPage({
   locations,
   roles,
 }: IUserDetailPage) {
-  return <UserDetail user={user} locations={locations} roles={roles} />;
+  // Fake locations and roles
+  const fakeLocations = Array.from({ length: 1000 }, (_, i) => ({
+    id: i,
+    name: Math.random().toString(36).substring(2),
+    departments: [],
+  }));
+  const fakeRoles = Array.from({ length: 10 }, (_, i) => ({
+    id: i,
+    name: Math.random().toString(36).substring(2),
+    permissions: [],
+  }));
+
+  return <UserDetail user={user} locations={fakeLocations} roles={roles} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

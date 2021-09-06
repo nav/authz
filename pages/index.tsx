@@ -38,42 +38,8 @@ export default function Index({
   permissions,
   locations,
 }: IndexProps) {
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [drawerTitle, setDrawerTitle] = React.useState("");
-  const [drawerContent, setDrawerContent] = React.useState("");
-  const [drawerFooter, setDrawerFooter] = React.useState("");
-
-  // // Fake locations and roles
-  // const fakeLocations = Array.from({ length: 10000 }, (_, i) => ({
-  //   id: i,
-  //   name: Math.random().toString(36).substring(2),
-  //   departments: [],
-  // }));
-  // const fakeRoles = Array.from({ length: 10 }, (_, i) => ({
-  //   id: i,
-  //   name: Math.random().toString(36).substring(2),
-  //   permissions: [],
-  // }));
-
   const _roles = <Roles roles={roles} />;
-  const _users = (
-    <Users
-      users={users}
-      locations={locations}
-      roles={roles}
-      onViewRoles={(title, body, footer) => {
-        setDrawerTitle(title);
-        setDrawerContent(body);
-        setDrawerFooter(footer);
-        onOpen();
-      }}
-      onAddRoles={(title, body, footer) => {
-        setDrawerTitle(title);
-        setDrawerContent(body);
-        setDrawerFooter(footer);
-      }}
-    />
-  );
+  const _users = <Users users={users} />;
   const _permissions = <Permissions permissions={permissions} />;
 
   return (
@@ -94,16 +60,6 @@ export default function Index({
           <TabPanel>{_permissions}</TabPanel>
         </TabPanels>
       </Tabs>
-
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose} size="xl">
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader>{drawerTitle}</DrawerHeader>
-          <DrawerBody>{drawerContent}</DrawerBody>
-          <DrawerFooter>{drawerFooter}</DrawerFooter>
-        </DrawerContent>
-      </Drawer>
     </>
   );
 }

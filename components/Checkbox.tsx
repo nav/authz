@@ -2,7 +2,8 @@ import styles from "./Checkbox.module.css";
 
 type CheckboxProps = {
   id: string;
-  checked: boolean;
+  checked?: boolean;
+  defaultChecked?: boolean;
   onChange: any;
   children: any;
   disabled?: boolean;
@@ -16,6 +17,7 @@ function Checkbox(props: CheckboxProps) {
         id={props.id}
         type="checkbox"
         checked={props.checked}
+        defaultChecked={props.defaultChecked}
         disabled={props.disabled || false}
         onChange={props.onChange}
       />
