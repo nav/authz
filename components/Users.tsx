@@ -376,27 +376,20 @@ function AddUserLocationsRoles({
   roles,
   onAdd,
 }: IAddUserLocationsRoles) {
-  const [selectionSummary, setSelectionSummary] = React.useState("");
   const [selectedLocations, setSelectedLocations] = React.useState<ILocation[]>(
     []
   );
   const [selectedRoles, setSelectedRoles] = React.useState<IRole[]>([]);
 
-  React.useEffect(() => {
-    const _locationRoles: ILocationRoles[] = [];
-    selectedLocations.forEach((location: ILocation) =>
-      _locationRoles.push({ location: location, roles: selectedRoles })
-    );
-    onAdd(_locationRoles);
-    setSelectionSummary(
-      `${pluralize(selectedRoles.length, "role")} in ${pluralize(
-        selectedLocations.length,
-        "location"
-      )}`
-    );
-  }, [selectedLocations, selectedRoles]);
-
   const isLocationRolesMultiSelectDisabled = selectedLocations.length === 0;
+
+  const buildLocationRoles = (locations: ILocation[], roles: IRole[]) => {
+    const locationRoles: ILocationRoles[] = [];
+    locations.forEach((location: ILocation) =>
+      locationRoles.push({ location: location, roles: roles })
+    );
+    onAdd(locationRoles);
+  };
 
   return (
     <VStack spacing={3}>
@@ -410,6 +403,7 @@ function AddUserLocationsRoles({
               if (_locations.length === 0) {
                 setSelectedRoles([]);
               }
+              buildLocationRoles(_locations, selectedRoles);
             }}
           />
         </Box>
@@ -419,7 +413,10 @@ function AddUserLocationsRoles({
             title="Roles"
             items={roles}
             isDisabled={isLocationRolesMultiSelectDisabled}
-            onSelect={(_roles: IRole[]) => setSelectedRoles(_roles)}
+            onSelect={(_roles: IRole[]) => {
+              setSelectedRoles(_roles);
+              buildLocationRoles(selectedLocations, _roles);
+            }}
           />
         </Box>
       </HStack>
@@ -500,4 +497,4 @@ function ViewUserLocationsRoles({
   return <div>{render}</div>;
 }
 
-export { Users, UserDetail, AddUserLocationsRoles, ViewUserLocationsRoles };
+export { Users, UserDetail };

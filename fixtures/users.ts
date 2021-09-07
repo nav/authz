@@ -1,16 +1,12 @@
-import type {
-  IUser,
-  ILocation,
-  IDepartment,
-  ILocationRoles,
-  IDepartmentRoles,
-} from "../types/users";
+import type { IUser, ILocationRoles, IDepartmentRoles } from "../types/users";
 import {
   RequesterRole,
   ApproverRole,
   PurchaserRole,
   ReceiverRole,
 } from "./roles";
+import { ILocation } from "../types/locations";
+import { IDepartment } from "../types/departments";
 
 const VancouverLocation: ILocation = {
   id: 1,

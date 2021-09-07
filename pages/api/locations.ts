@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { ILocation } from "../../types/users";
+import type { ILocation } from "../../types/locations";
 
 import { locations } from "../../fixtures/users";
 
