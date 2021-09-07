@@ -52,6 +52,10 @@ type ILocationRoles = {
   roles: IRole[];
 };
 
+type ILocationRolesMap = {
+  [id: number]: number[];
+};
+
 /**
  * Convert LocationRoles to a map containing ids for easy manipulation.
  *
@@ -59,7 +63,7 @@ type ILocationRoles = {
  * @return {[id: number]: number[]}
  */
 const locationRolesToMap = (locationRoles: ILocationRoles[]) => {
-  const map: { [id: number]: number[] } = {};
+  const map: ILocationRolesMap = {};
   locationRoles.forEach((lr) => {
     map[lr.location.id] = lr.roles.map((r) => r.id);
   });
@@ -70,13 +74,13 @@ const locationRolesToMap = (locationRoles: ILocationRoles[]) => {
  * Convert a map containing location and role ids to array of location roles.
  * @param {ILocation[]} locations   Source array of locations.
  * @param {IRole[]}     roles       Source array of roles.
- * @param {[id: number]: number[]}  Map of location id and role ids.
+ * @param {ILocationRolesMap}        Map of location id and role ids.
  * @return {ILocationRoles[]}
  */
 const mapToLocationRoles = (
   locations: ILocation[],
   roles: IRole[],
-  locationRolesMap: { [id: number]: number[] }
+  locationRolesMap: ILocationRolesMap
 ) => {
   const locationsMap: { [id: number]: ILocation } = {};
   locations.map((l) => (locationsMap[l.id] = l));
@@ -87,7 +91,7 @@ const mapToLocationRoles = (
   const locationRoles = [];
   for (const locationId in locationRolesMap) {
     const roles = locationRolesMap[locationId];
-    roles.sort();
+    roles.sort(); // Keep roles display consistent.
     if (roles.length > 0) {
       locationRoles.push({
         location: locationsMap[locationId],
@@ -144,13 +148,54 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
   } = useDisclosure();
 
   const [userState, setUserState] = React.useState<IUser>(user);
-  const [userLocationRolesState, setUserLocationRolesState] = React.useState<
-    ILocationRoles[]
-  >(user.location_roles);
 
   const [locationRolesToBeAdded, setLocationRolesToBeAdded] = React.useState<
     ILocationRoles[]
   >([]);
+
+  const [locationRolesToBeRemoved, setLocationRolesToBeRemoved] =
+    React.useState<ILocationRolesMap>({});
+
+  const addLocationRoles = (locationRolesToBeAdded: ILocationRoles[]) => {
+    const newLocationRolesMap = mergeRoles(
+      userState.location_roles,
+      locationRolesToBeAdded
+    );
+    userState.location_roles = mapToLocationRoles(
+      locations,
+      roles,
+      newLocationRolesMap
+    );
+    setUserState({ ...userState });
+  };
+
+  const removeLocationRoles = (
+    toBeRemovedlocationRolesMap: ILocationRolesMap
+  ) => {
+    const existingLocationRolesMap = locationRolesToMap(
+      userState.location_roles
+    );
+    for (const locationId in toBeRemovedlocationRolesMap) {
+      const rolesToBeRemoved = new Set(toBeRemovedlocationRolesMap[locationId]);
+      if (
+        rolesToBeRemoved.size > 0 &&
+        typeof existingLocationRolesMap[locationId] !== "undefined"
+      ) {
+        const remainingRoles = new Set(
+          [...existingLocationRolesMap[locationId]].filter(
+            (r) => !rolesToBeRemoved.has(r)
+          )
+        );
+        existingLocationRolesMap[locationId] = Array.from(remainingRoles);
+      }
+    }
+    userState.location_roles = mapToLocationRoles(
+      locations,
+      roles,
+      existingLocationRolesMap
+    );
+    setUserState({ ...userState });
+  };
 
   const addRolesDrawer = (
     <Drawer isOpen={isAddRolesOpen} onClose={onAddRolesClose} size="lg">
@@ -173,11 +218,7 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
           <Button
             colorScheme="blue"
             onClick={() => {
-              userState.location_roles = mapToLocationRoles(
-                locations,
-                roles,
-                mergeRoles(userState.location_roles, locationRolesToBeAdded)
-              );
+              addLocationRoles(locationRolesToBeAdded);
               onAddRolesClose();
             }}
           >
@@ -227,8 +268,7 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
                           </Button>{" "}
                           <Button
                             onClick={() => {
-                              user.location_roles = userLocationRolesState;
-                              setUserState({ ...user });
+                              removeLocationRoles(locationRolesToBeRemoved);
                               onEditModeClose();
                             }}
                           >
@@ -251,11 +291,9 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
                 <CardContent>
                   <ViewUserLocationsRoles
                     user={userState}
-                    locations={locations}
-                    roles={roles}
                     isEditMode={isEditModeOpen}
-                    onRemove={(locationRoles) => {
-                      setUserLocationRolesState(locationRoles);
+                    onRemove={(userLocationRolesTobeRemoved) => {
+                      setLocationRolesToBeRemoved(userLocationRolesTobeRemoved);
                     }}
                   />
                 </CardContent>
@@ -391,23 +429,39 @@ function AddUserLocationsRoles({
 
 type IViewUserLocationsRoles = {
   user: IUser;
-  locations: ILocation[];
-  roles: IRole[];
   isEditMode: boolean;
-  onRemove: (locationRoles: ILocationRoles[]) => void;
+  onRemove: (userLocationRolesMap: ILocationRolesMap) => void;
 };
 
 function ViewUserLocationsRoles({
   user,
-  locations,
-  roles,
   isEditMode,
   onRemove,
 }: IViewUserLocationsRoles) {
-  const [state, setState] = React.useState<any>({});
-  React.useEffect(() => {
-    setState(locationRolesToMap(user.location_roles));
-  }, [user.location_roles]);
+  const [rolesToBeRemoved, setRolesToBeRemoved] =
+    React.useState<ILocationRolesMap>({});
+
+  const _addRole = (locationId: number, roleId: number) => {
+    if (!(locationId in rolesToBeRemoved)) {
+      rolesToBeRemoved[locationId] = [];
+    }
+    rolesToBeRemoved[locationId].push(roleId);
+  };
+
+  const _removeRole = (locationId: number, roleId: number) => {
+    const roles = rolesToBeRemoved[locationId].filter((r) => r !== roleId);
+    rolesToBeRemoved[locationId] = roles;
+  };
+
+  const handleChange = (
+    isChecked: boolean,
+    locationId: number,
+    roleId: number
+  ) => {
+    !isChecked ? _addRole(locationId, roleId) : _removeRole(locationId, roleId);
+    setRolesToBeRemoved({ ...rolesToBeRemoved });
+    onRemove(rolesToBeRemoved);
+  };
 
   const render = user.location_roles.map((lr) => (
     <Property
@@ -422,23 +476,13 @@ function ViewUserLocationsRoles({
                   key={`lr_${lr.location.id}_${role.id}`}
                   id={`lr_${lr.location.id}_${role.id}`}
                   checked={
-                    typeof state[lr.location.id] !== "undefined"
-                      ? state[lr.location.id]?.includes(role.id)
-                      : false
+                    typeof rolesToBeRemoved[lr.location.id] === "undefined"
+                      ? true
+                      : !rolesToBeRemoved[lr.location.id]?.includes(role.id)
                   }
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLInputElement;
-                    if (!target.checked) {
-                      state[lr.location.id] = state[lr.location.id].filter(
-                        (r: number) => r != role.id
-                      );
-                    } else {
-                      const roleSet = new Set(state[lr.location.id]);
-                      roleSet.add(role.id);
-                      state[lr.location.id] = Array.from(roleSet);
-                    }
-                    setState({ ...state });
-                    onRemove(mapToLocationRoles(locations, roles, state));
+                    handleChange(target.checked, lr.location.id, role.id);
                   }}
                 >
                   {role.name}

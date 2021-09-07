@@ -28,7 +28,7 @@ export default function UserDetailPage({
     permissions: [],
   }));
 
-  return <UserDetail user={user} locations={fakeLocations} roles={roles} />;
+  return <UserDetail user={user} locations={locations} roles={roles} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
