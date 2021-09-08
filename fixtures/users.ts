@@ -1,55 +1,34 @@
-import type { IUser, ILocationRoles, IDepartmentRoles } from "../types/users";
+import type { IUser, ISegmentRoles } from "../types/users";
 import {
   RequesterRole,
   ApproverRole,
   PurchaserRole,
   ReceiverRole,
 } from "./roles";
-import { ILocation } from "../types/locations";
-import { IDepartment } from "../types/departments";
+import { ISegment } from "../types/segments";
 
-const VancouverLocation: ILocation = {
+const VancouverSegment: ISegment = {
   id: 1,
   name: "Vancouver",
-  departments: [
-    { id: 1, name: "Marketing" },
-    { id: 2, name: "Sales" },
-    { id: 3, name: "Engineering" },
-  ],
 };
-const TorontoLocation: ILocation = {
+const TorontoSegment: ISegment = {
   id: 2,
   name: "Toronto",
-  departments: [
-    { id: 4, name: "Marketing" },
-    { id: 5, name: "Sales" },
-    { id: 6, name: "Engineering" },
-  ],
 };
-const MontrealLocation: ILocation = {
+const MontrealSegment: ISegment = {
   id: 3,
   name: "Montreal",
-  departments: [
-    { id: 7, name: "Marketing" },
-    { id: 8, name: "Sales" },
-    { id: 9, name: "Engineering" },
-  ],
 };
-const CalgaryLocation: ILocation = {
+const CalgarySegment: ISegment = {
   id: 4,
   name: "Calgary",
-  departments: [
-    { id: 10, name: "Marketing" },
-    { id: 11, name: "Sales" },
-    { id: 12, name: "Engineering" },
-  ],
 };
 
-export const locations: ILocation[] = [
-  VancouverLocation,
-  TorontoLocation,
-  MontrealLocation,
-  CalgaryLocation,
+export const segments: ISegment[] = [
+  VancouverSegment,
+  TorontoSegment,
+  MontrealSegment,
+  CalgarySegment,
 ];
 
 export const users: IUser[] = [
@@ -59,11 +38,11 @@ export const users: IUser[] = [
     last_name: "Requester",
     email: "alice@example.com",
     position: "Software Developer",
-    location_roles: [
-      { location: VancouverLocation, roles: [RequesterRole] },
-      { location: TorontoLocation, roles: [RequesterRole] },
-      { location: MontrealLocation, roles: [RequesterRole] },
-      { location: CalgaryLocation, roles: [RequesterRole] },
+    segment_roles: [
+      { segment: VancouverSegment, roles: [RequesterRole] },
+      { segment: TorontoSegment, roles: [RequesterRole] },
+      { segment: MontrealSegment, roles: [RequesterRole] },
+      { segment: CalgarySegment, roles: [RequesterRole] },
     ],
   },
   {
@@ -72,9 +51,9 @@ export const users: IUser[] = [
     last_name: "Approver",
     email: "bob@example.com",
     position: "Engineering Manager",
-    location_roles: [
-      { location: VancouverLocation, roles: [RequesterRole, ApproverRole] },
-      { location: TorontoLocation, roles: [RequesterRole, ApproverRole] },
+    segment_roles: [
+      { segment: VancouverSegment, roles: [RequesterRole, ApproverRole] },
+      { segment: TorontoSegment, roles: [RequesterRole, ApproverRole] },
     ],
   },
   {
@@ -83,9 +62,9 @@ export const users: IUser[] = [
     last_name: "Purchaser",
     email: "charlier@example.com",
     position: "Office Manager",
-    location_roles: [
-      { location: VancouverLocation, roles: [PurchaserRole] },
-      { location: MontrealLocation, roles: [PurchaserRole] },
+    segment_roles: [
+      { segment: VancouverSegment, roles: [PurchaserRole] },
+      { segment: MontrealSegment, roles: [PurchaserRole] },
     ],
   },
   {
@@ -94,6 +73,6 @@ export const users: IUser[] = [
     last_name: "Receiver",
     email: "doug@example.com",
     position: "Warehouse Engineer",
-    location_roles: [],
+    segment_roles: [],
   },
 ];

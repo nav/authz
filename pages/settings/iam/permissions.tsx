@@ -1,6 +1,7 @@
 import { GetServerSideProps } from "next";
 import { Divider, Heading } from "@chakra-ui/react";
 
+import { definitions } from "../../../config";
 import type { IPermissionDict } from "../../../types/permissions";
 import { Permissions } from "../../../components/Permissions";
 
@@ -18,7 +19,9 @@ export default function Index({ permissions }: IndexProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const permissions_res = await fetch("http://localhost:3001/api/permissions");
+  const permissions_res = await fetch(
+    `${definitions.API_SERVER}/api/permissions`
+  );
   const permissions_json: any = await permissions_res.json();
 
   return {

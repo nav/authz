@@ -1,6 +1,7 @@
 import { GetServerSideProps } from "next";
 import { Divider, Heading } from "@chakra-ui/react";
 
+import { definitions } from "../../../config";
 import type { IRole } from "../../../types/roles";
 import { Roles } from "../../../components/Roles";
 
@@ -19,7 +20,7 @@ export default function Index({ roles }: IndexProps) {
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
-  const roles_res = await fetch("http://localhost:3001/api/roles");
+  const roles_res = await fetch(`${definitions.API_SERVER}/api/roles`);
   const roles_json: any = await roles_res.json();
 
   return {

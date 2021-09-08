@@ -2,6 +2,7 @@ import { GetServerSideProps } from "next";
 import * as React from "react";
 import { Divider, Heading } from "@chakra-ui/react";
 
+import { definitions } from "../../../../config";
 import type { IUser } from "../../../../types/users";
 import { Users } from "../../../../components/Users";
 
@@ -24,7 +25,7 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
     Authorization: `Token ${process.env.ACCESS_TOKEN}`,
   };
 
-  const users_res = await fetch("http://localhost:3001/api/users", {
+  const users_res = await fetch(`${definitions.API_SERVER}/api/users`, {
     headers: headers,
   });
   const users_json: any = await users_res.json();

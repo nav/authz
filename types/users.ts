@@ -1,14 +1,8 @@
 import type { IRole } from "./roles";
-import type { IDepartment } from "./departments";
-import type { ILocation } from "./locations";
+import type { ISegment } from "./segments";
 
-export interface ILocationRoles {
-  location: ILocation;
-  roles: IRole[];
-}
-
-export interface IDepartmentRoles {
-  department: IDepartment;
+export interface ISegmentRoles {
+  segment: ISegment;
   roles: IRole[];
 }
 
@@ -18,6 +12,5 @@ export interface IUser {
   last_name: string;
   email: string;
   position: string;
-  location_roles: ILocationRoles[];
-  department_roles?: IDepartmentRoles[];
+  segment_roles: ISegmentRoles[];
 }
