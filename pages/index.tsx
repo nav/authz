@@ -1,10 +1,5 @@
-import NextLink from "next/link";
-import { Link } from "@chakra-ui/react";
+import { Box } from "@chakra-ui/react";
 
 export default function Index() {
-  return (
-    <NextLink href={`/settings/iam`} passHref>
-      <Link>Go to IAM Settings</Link>
-    </NextLink>
-  );
+  return <Box>Use the Menu on left to get started.</Box>;
 }

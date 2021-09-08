@@ -1,5 +1,6 @@
 import { GetServerSideProps } from "next";
 import * as React from "react";
+import { Divider, Heading } from "@chakra-ui/react";
 
 import type { IUser } from "../../../../types/users";
 import { Users } from "../../../../components/Users";
@@ -9,7 +10,13 @@ type IndexProps = {
 };
 
 export default function Index({ users }: IndexProps) {
-  return <Users users={users} />;
+  return (
+    <>
+      <Heading size="md">Users</Heading>
+      <Divider my={5} />
+      <Users users={users} />
+    </>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

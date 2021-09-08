@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import * as React from "react";
+import { Divider, Heading } from "@chakra-ui/react";
 
 import type { IPermissionDict } from "../../../types/permissions";
 import { Permissions } from "../../../components/Permissions";
@@ -9,7 +9,12 @@ type IndexProps = {
 };
 
 export default function Index({ permissions }: IndexProps) {
-  return <Permissions permissions={permissions} />;
+  return (
+    <>
+      <Heading size="md">Permissions</Heading>
+      <Divider my={5} /> <Permissions permissions={permissions} />
+    </>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

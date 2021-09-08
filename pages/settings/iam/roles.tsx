@@ -1,5 +1,5 @@
 import { GetServerSideProps } from "next";
-import * as React from "react";
+import { Divider, Heading } from "@chakra-ui/react";
 
 import type { IRole } from "../../../types/roles";
 import { Roles } from "../../../components/Roles";
@@ -9,7 +9,13 @@ type IndexProps = {
 };
 
 export default function Index({ roles }: IndexProps) {
-  return <Roles roles={roles} />;
+  return (
+    <>
+      <Heading size="md">Roles</Heading>
+      <Divider my={5} />
+      <Roles roles={roles} />
+    </>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {

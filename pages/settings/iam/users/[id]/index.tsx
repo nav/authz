@@ -1,4 +1,5 @@
 import { GetServerSideProps } from "next";
+import { Divider, Heading } from "@chakra-ui/react";
 
 import { definitions } from "../../../../../config";
 import type { IUser } from "../../../../../types/users";
@@ -29,7 +30,15 @@ export default function UserDetailPage({
     permissions: [],
   }));
 
-  return <UserDetail user={user} locations={locations} roles={roles} />;
+  return (
+    <>
+      <Heading size="md">
+        {user.first_name} {user.last_name}
+      </Heading>
+      <Divider my={5} />
+      <UserDetail user={user} locations={locations} roles={roles} />
+    </>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
