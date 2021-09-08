@@ -29,13 +29,12 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 
+import { definitions } from "../config";
 import type { IRole } from "../types/roles";
-import type { ILocation } from "../types/locations";
+import type { ISegment } from "../types/segments";
 import type { IUser } from "../types/users";
-import { Role } from "./Roles";
 import { Checkbox } from "./Checkbox";
 import { MultiSelect } from "./MultiSelect";
-import { pluralize } from "../lib/utils";
 import { Card } from "./Card/Card";
 import { CardContent } from "./Card/CardContent";
 import { CardHeader } from "./Card/CardHeader";
@@ -43,98 +42,98 @@ import { Property } from "./Card/Property";
 
 type IUserDetail = {
   user: IUser;
-  locations: ILocation[];
+  segments: ISegment[];
   roles: IRole[];
 };
 
-type ILocationRoles = {
-  location: ILocation;
+type ISegmentRoles = {
+  segment: ISegment;
   roles: IRole[];
 };
 
-type ILocationRolesMap = {
+type ISegmentRolesMap = {
   [id: number]: number[];
 };
 
 /**
- * Convert LocationRoles to a map containing ids for easy manipulation.
+ * Convert SegmentRoles to a map containing ids for easy manipulation.
  *
- * @param {ILocationRoles[]} locationRoles  Location roles to be convered
+ * @param {ISegmentRoles[]} segmentRoles  Segment roles to be convered
  * @return {[id: number]: number[]}
  */
-const locationRolesToMap = (locationRoles: ILocationRoles[]) => {
-  const map: ILocationRolesMap = {};
-  locationRoles.forEach((lr) => {
-    map[lr.location.id] = lr.roles.map((r) => r.id);
+const segmentRolesToMap = (segmentRoles: ISegmentRoles[]) => {
+  const map: ISegmentRolesMap = {};
+  segmentRoles.forEach((lr) => {
+    map[lr.segment.id] = lr.roles.map((r) => r.id);
   });
   return map;
 };
 
 /**
- * Convert a map containing location and role ids to array of location roles.
- * @param {ILocation[]} locations   Source array of locations.
+ * Convert a map containing segment and role ids to array of segment roles.
+ * @param {ISegment[]} segments   Source array of segments.
  * @param {IRole[]}     roles       Source array of roles.
- * @param {ILocationRolesMap}        Map of location id and role ids.
- * @return {ILocationRoles[]}
+ * @param {ISegmentRolesMap}        Map of segment id and role ids.
+ * @return {ISegmentRoles[]}
  */
-const mapToLocationRoles = (
-  locations: ILocation[],
+const mapToSegmentRoles = (
+  segments: ISegment[],
   roles: IRole[],
-  locationRolesMap: ILocationRolesMap
+  segmentRolesMap: ISegmentRolesMap
 ) => {
-  const locationsMap: { [id: number]: ILocation } = {};
-  locations.map((l) => (locationsMap[l.id] = l));
+  const segmentsMap: { [id: number]: ISegment } = {};
+  segments.map((l) => (segmentsMap[l.id] = l));
 
   const rolesMap: { [id: number]: IRole } = {};
   roles.map((r) => (rolesMap[r.id] = r));
 
-  const locationRoles = [];
-  for (const locationId in locationRolesMap) {
-    const roles = locationRolesMap[locationId];
+  const segmentRoles = [];
+  for (const segmentId in segmentRolesMap) {
+    const roles = segmentRolesMap[segmentId];
     roles.sort(); // Keep roles display consistent.
     if (roles.length > 0) {
-      locationRoles.push({
-        location: locationsMap[locationId],
-        roles: locationRolesMap[locationId].map((roleId) => rolesMap[roleId]),
+      segmentRoles.push({
+        segment: segmentsMap[segmentId],
+        roles: segmentRolesMap[segmentId].map((roleId) => rolesMap[roleId]),
       });
     }
   }
 
-  return locationRoles;
+  return segmentRoles;
 };
 
 /**
  * Merge the existing and new roles. Merge process is additive and does not
  * remove existing roles.
  *
- * @param  {ILocationRoles[]} existingLocationRoles User's existing location roles.
- * @param  {ILocationRoles[]} newLocationRoles      New roles being added to user.
+ * @param  {ISegmentRoles[]} existingSegmentRoles User's existing segment roles.
+ * @param  {ISegmentRoles[]} newSegmentRoles      New roles being added to user.
  * @return {[id: number]: number[]}
  */
 const mergeRoles = (
-  existingLocationRoles: ILocationRoles[],
-  newLocationRoles: ILocationRoles[]
+  existingSegmentRoles: ISegmentRoles[],
+  newSegmentRoles: ISegmentRoles[]
 ) => {
-  const existingLocationRolesMap = locationRolesToMap(existingLocationRoles);
-  const newLocationRolesMap = locationRolesToMap(newLocationRoles);
+  const existingSegmentRolesMap = segmentRolesToMap(existingSegmentRoles);
+  const newSegmentRolesMap = segmentRolesToMap(newSegmentRoles);
 
-  for (const locationId in existingLocationRolesMap) {
-    if (locationId in newLocationRolesMap) {
-      const roleSet = new Set(existingLocationRolesMap[locationId]);
-      newLocationRolesMap[locationId].map((rid) => roleSet.add(rid));
-      delete newLocationRolesMap[locationId];
-      existingLocationRolesMap[locationId] = Array.from(roleSet);
+  for (const segmentId in existingSegmentRolesMap) {
+    if (segmentId in newSegmentRolesMap) {
+      const roleSet = new Set(existingSegmentRolesMap[segmentId]);
+      newSegmentRolesMap[segmentId].map((rid) => roleSet.add(rid));
+      delete newSegmentRolesMap[segmentId];
+      existingSegmentRolesMap[segmentId] = Array.from(roleSet);
     }
   }
 
-  if (Object.keys(newLocationRolesMap).length > 0) {
-    return Object.assign(existingLocationRolesMap, newLocationRolesMap);
+  if (Object.keys(newSegmentRolesMap).length > 0) {
+    return Object.assign(existingSegmentRolesMap, newSegmentRolesMap);
   }
 
-  return existingLocationRolesMap;
+  return existingSegmentRolesMap;
 };
 
-function UserDetail({ user, locations, roles }: IUserDetail) {
+function UserDetail({ user, segments, roles }: IUserDetail) {
   const {
     isOpen: isEditModeOpen,
     onOpen: onEditModeOpen,
@@ -149,65 +148,61 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
 
   const [userState, setUserState] = React.useState<IUser>(user);
 
-  const [locationRolesToBeAdded, setLocationRolesToBeAdded] = React.useState<
-    ILocationRoles[]
+  const [segmentRolesToBeAdded, setSegmentRolesToBeAdded] = React.useState<
+    ISegmentRoles[]
   >([]);
 
-  const [locationRolesToBeRemoved, setLocationRolesToBeRemoved] =
-    React.useState<ILocationRolesMap>({});
+  const [segmentRolesToBeRemoved, setSegmentRolesToBeRemoved] =
+    React.useState<ISegmentRolesMap>({});
 
-  const addLocationRoles = (locationRolesToBeAdded: ILocationRoles[]) => {
-    const newLocationRolesMap = mergeRoles(
-      userState.location_roles,
-      locationRolesToBeAdded
+  const addSegmentRoles = (segmentRolesToBeAdded: ISegmentRoles[]) => {
+    const newSegmentRolesMap = mergeRoles(
+      userState.segment_roles,
+      segmentRolesToBeAdded
     );
-    userState.location_roles = mapToLocationRoles(
-      locations,
+    userState.segment_roles = mapToSegmentRoles(
+      segments,
       roles,
-      newLocationRolesMap
+      newSegmentRolesMap
     );
     setUserState({ ...userState });
   };
 
-  const removeLocationRoles = (
-    toBeRemovedlocationRolesMap: ILocationRolesMap
-  ) => {
-    const existingLocationRolesMap = locationRolesToMap(
-      userState.location_roles
-    );
-    for (const locationId in toBeRemovedlocationRolesMap) {
-      const rolesToBeRemoved = new Set(toBeRemovedlocationRolesMap[locationId]);
+  const removeSegmentRoles = (toBeRemovedsegmentRolesMap: ISegmentRolesMap) => {
+    const existingSegmentRolesMap = segmentRolesToMap(userState.segment_roles);
+    for (const segmentId in toBeRemovedsegmentRolesMap) {
+      const rolesToBeRemoved = new Set(toBeRemovedsegmentRolesMap[segmentId]);
       if (
         rolesToBeRemoved.size > 0 &&
-        typeof existingLocationRolesMap[locationId] !== "undefined"
+        typeof existingSegmentRolesMap[segmentId] !== "undefined"
       ) {
         const remainingRoles = new Set(
-          [...existingLocationRolesMap[locationId]].filter(
+          [...existingSegmentRolesMap[segmentId]].filter(
             (r) => !rolesToBeRemoved.has(r)
           )
         );
-        existingLocationRolesMap[locationId] = Array.from(remainingRoles);
+        existingSegmentRolesMap[segmentId] = Array.from(remainingRoles);
       }
     }
-    userState.location_roles = mapToLocationRoles(
-      locations,
+    userState.segment_roles = mapToSegmentRoles(
+      segments,
       roles,
-      existingLocationRolesMap
+      existingSegmentRolesMap
     );
     setUserState({ ...userState });
   };
 
   const addRolesDrawer = (
-    <Drawer isOpen={isAddRolesOpen} onClose={onAddRolesClose} size="lg">
+    <Drawer isOpen={isAddRolesOpen} onClose={onAddRolesClose} size="xl">
       <DrawerContent>
         <DrawerCloseButton />
         <DrawerHeader>Add Roles</DrawerHeader>
         <DrawerBody>
-          <AddUserLocationsRoles
-            locations={locations}
+          <AddUserSegmentsRoles
+            segments={segments}
             roles={roles}
-            onAdd={(locationRoles: ILocationRoles[]) =>
-              setLocationRolesToBeAdded(locationRoles)
+            onAdd={(segmentRoles: ISegmentRoles[]) =>
+              setSegmentRolesToBeAdded(segmentRoles)
             }
           />
         </DrawerBody>
@@ -218,7 +213,7 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
           <Button
             colorScheme="blue"
             onClick={() => {
-              addLocationRoles(locationRolesToBeAdded);
+              addSegmentRoles(segmentRolesToBeAdded);
               onAddRolesClose();
             }}
           >
@@ -229,13 +224,15 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
     </Drawer>
   );
 
+  const segmentRolesLabel = `${definitions.SEGMENT_NAME} Roles`;
+
   return (
     <>
       {addRolesDrawer}
       <Tabs>
         <TabList>
           <Tab>Profile</Tab>
-          <Tab>Location Roles</Tab>
+          <Tab>{segmentRolesLabel}</Tab>
         </TabList>
         <TabPanels>
           <TabPanel>
@@ -258,7 +255,7 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
             <Box as="section" py="12" px={{ md: "8" }}>
               <Card maxW="3xl" mx="auto">
                 <CardHeader
-                  title="Location Roles"
+                  title={segmentRolesLabel}
                   action={
                     <>
                       {isEditModeOpen ? (
@@ -268,7 +265,7 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
                           </Button>{" "}
                           <Button
                             onClick={() => {
-                              removeLocationRoles(locationRolesToBeRemoved);
+                              removeSegmentRoles(segmentRolesToBeRemoved);
                               onEditModeClose();
                             }}
                           >
@@ -289,11 +286,11 @@ function UserDetail({ user, locations, roles }: IUserDetail) {
                   }
                 />
                 <CardContent>
-                  <ViewUserLocationsRoles
+                  <ViewUserSegmentsRoles
                     user={userState}
                     isEditMode={isEditModeOpen}
-                    onRemove={(userLocationRolesTobeRemoved) => {
-                      setLocationRolesToBeRemoved(userLocationRolesTobeRemoved);
+                    onRemove={(userSegmentRolesTobeRemoved) => {
+                      setSegmentRolesToBeRemoved(userSegmentRolesTobeRemoved);
                     }}
                   />
                 </CardContent>
@@ -311,15 +308,17 @@ type IUserRow = {
 };
 
 function UserRow({ user }: IUserRow) {
-  const locationRoles = user.location_roles;
+  const segmentRoles = user.segment_roles;
   const allRoles: IRole[] = [];
-  locationRoles.map((lr) => allRoles.push(...lr.roles));
+  segmentRoles.map((lr) => allRoles.push(...lr.roles));
   const roles = new Set<IRole>(allRoles);
 
   const _roles =
-    roles.size === 0 && locationRoles.length === 0
+    roles.size === 0 && segmentRoles.length === 0
       ? "No roles assigned"
-      : `${roles.size} roles in ${locationRoles.length} locations`;
+      : `${roles.size} roles in ${
+          segmentRoles.length
+        } ${definitions.SEGMENT_NAME_PLURAL?.toLowerCase()}`;
 
   return (
     <Tr>
@@ -365,30 +364,30 @@ function Users({ users }: IUsers) {
   );
 }
 
-type IAddUserLocationsRoles = {
-  locations: ILocation[];
+type IAddUserSegmentsRoles = {
+  segments: ISegment[];
   roles: IRole[];
-  onAdd: (locationRoles: ILocationRoles[]) => void;
+  onAdd: (segmentRoles: ISegmentRoles[]) => void;
 };
 
-function AddUserLocationsRoles({
-  locations,
+function AddUserSegmentsRoles({
+  segments,
   roles,
   onAdd,
-}: IAddUserLocationsRoles) {
-  const [selectedLocations, setSelectedLocations] = React.useState<ILocation[]>(
+}: IAddUserSegmentsRoles) {
+  const [selectedSegments, setSelectedSegments] = React.useState<ISegment[]>(
     []
   );
   const [selectedRoles, setSelectedRoles] = React.useState<IRole[]>([]);
 
-  const isLocationRolesMultiSelectDisabled = selectedLocations.length === 0;
+  const isSegmentRolesMultiSelectDisabled = selectedSegments.length === 0;
 
-  const buildLocationRoles = (locations: ILocation[], roles: IRole[]) => {
-    const locationRoles: ILocationRoles[] = [];
-    locations.forEach((location: ILocation) =>
-      locationRoles.push({ location: location, roles: roles })
+  const buildSegmentRoles = (segments: ISegment[], roles: IRole[]) => {
+    const segmentRoles: ISegmentRoles[] = [];
+    segments.forEach((segment: ISegment) =>
+      segmentRoles.push({ segment: segment, roles: roles })
     );
-    onAdd(locationRoles);
+    onAdd(segmentRoles);
   };
 
   return (
@@ -396,14 +395,14 @@ function AddUserLocationsRoles({
       <HStack w="full" align="flex-start">
         <Box w="49%">
           <MultiSelect
-            title="Locations"
-            items={locations}
-            onSelect={(_locations: ILocation[]) => {
-              setSelectedLocations(_locations);
-              if (_locations.length === 0) {
+            title={definitions.SEGMENT_NAME_PLURAL}
+            items={segments}
+            onSelect={(_segments: ISegment[]) => {
+              setSelectedSegments(_segments);
+              if (_segments.length === 0) {
                 setSelectedRoles([]);
               }
-              buildLocationRoles(_locations, selectedRoles);
+              buildSegmentRoles(_segments, selectedRoles);
             }}
           />
         </Box>
@@ -412,10 +411,10 @@ function AddUserLocationsRoles({
           <MultiSelect
             title="Roles"
             items={roles}
-            isDisabled={isLocationRolesMultiSelectDisabled}
+            isDisabled={isSegmentRolesMultiSelectDisabled}
             onSelect={(_roles: IRole[]) => {
               setSelectedRoles(_roles);
-              buildLocationRoles(selectedLocations, _roles);
+              buildSegmentRoles(selectedSegments, _roles);
             }}
           />
         </Box>
@@ -424,62 +423,62 @@ function AddUserLocationsRoles({
   );
 }
 
-type IViewUserLocationsRoles = {
+type IViewUserSegmentsRoles = {
   user: IUser;
   isEditMode: boolean;
-  onRemove: (userLocationRolesMap: ILocationRolesMap) => void;
+  onRemove: (userSegmentRolesMap: ISegmentRolesMap) => void;
 };
 
-function ViewUserLocationsRoles({
+function ViewUserSegmentsRoles({
   user,
   isEditMode,
   onRemove,
-}: IViewUserLocationsRoles) {
+}: IViewUserSegmentsRoles) {
   const [rolesToBeRemoved, setRolesToBeRemoved] =
-    React.useState<ILocationRolesMap>({});
+    React.useState<ISegmentRolesMap>({});
 
-  const _addRole = (locationId: number, roleId: number) => {
-    if (!(locationId in rolesToBeRemoved)) {
-      rolesToBeRemoved[locationId] = [];
+  const _addRole = (segmentId: number, roleId: number) => {
+    if (!(segmentId in rolesToBeRemoved)) {
+      rolesToBeRemoved[segmentId] = [];
     }
-    rolesToBeRemoved[locationId].push(roleId);
+    rolesToBeRemoved[segmentId].push(roleId);
   };
 
-  const _removeRole = (locationId: number, roleId: number) => {
-    const roles = rolesToBeRemoved[locationId].filter((r) => r !== roleId);
-    rolesToBeRemoved[locationId] = roles;
+  const _removeRole = (segmentId: number, roleId: number) => {
+    const roles = rolesToBeRemoved[segmentId].filter((r) => r !== roleId);
+    rolesToBeRemoved[segmentId] = roles;
   };
 
   const handleChange = (
     isChecked: boolean,
-    locationId: number,
+    segmentId: number,
     roleId: number
   ) => {
-    !isChecked ? _addRole(locationId, roleId) : _removeRole(locationId, roleId);
+    !isChecked ? _addRole(segmentId, roleId) : _removeRole(segmentId, roleId);
     setRolesToBeRemoved({ ...rolesToBeRemoved });
     onRemove(rolesToBeRemoved);
   };
 
-  const render = user.location_roles.map((lr) => (
+  const render = user.segment_roles.map((lr) => (
     <Property
-      key={`loc_${lr.location.id}`}
-      label={isEditMode ? <Box>{lr.location.name}</Box> : lr.location.name}
+      key={`loc_${lr.segment.id}`}
+      label={isEditMode ? <Box>{lr.segment.name}</Box> : lr.segment.name}
       value={
         <HStack spacing={6}>
           {lr.roles.map((role) =>
             isEditMode ? (
               <Box>
                 <Checkbox
-                  key={`lr_${lr.location.id}_${role.id}`}
-                  id={`lr_${lr.location.id}_${role.id}`}
+                  key={`lr_${lr.segment.id}_${role.id}`}
+                  id={`lr_${lr.segment.id}_${role.id}`}
                   checked={
-                    typeof rolesToBeRemoved[lr.location.id] === "undefined"
+                    typeof rolesToBeRemoved[lr.segment.id] === "undefined"
                       ? true
-                      : !rolesToBeRemoved[lr.location.id]?.includes(role.id)
+                      : !rolesToBeRemoved[lr.segment.id]?.includes(role.id)
                   }
                   onChange={(e: React.SyntheticEvent) => {
                     const target = e.target as HTMLInputElement;
-                    handleChange(target.checked, lr.location.id, role.id);
+                    handleChange(target.checked, lr.segment.id, role.id);
                   }}
                 >
                   {role.name}
