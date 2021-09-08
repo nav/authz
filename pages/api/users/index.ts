@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import type { IUser, IDepartment, ILocation } from "../../types/users";
-import { users, locations } from "../../fixtures/users";
+import type { IUser } from "../../../types/users";
+import { users } from "../../../fixtures/users";
 
 type ApiResponse = { data: IUser[] };
 

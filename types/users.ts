@@ -1,15 +1,6 @@
 import type { IRole } from "./roles";
-
-export interface IDepartment {
-  id: number;
-  name: string;
-}
-
-export interface ILocation {
-  id: number;
-  name: string;
-  departments: IDepartment[];
-}
+import type { IDepartment } from "./departments";
+import type { ILocation } from "./locations";
 
 export interface ILocationRoles {
   location: ILocation;
