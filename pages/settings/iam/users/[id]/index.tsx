@@ -1,6 +1,4 @@
-import NextLink from "next/link";
 import { GetServerSideProps } from "next";
-import { Link } from "@chakra-ui/react";
 
 import { definitions } from "../../../../../config";
 import type { IUser } from "../../../../../types/users";
@@ -31,14 +29,7 @@ export default function UserDetailPage({
     permissions: [],
   }));
 
-  return (
-    <>
-      <NextLink href={`/settings/iam`} passHref>
-        <Link>Users</Link>
-      </NextLink>
-      <UserDetail user={user} locations={locations} roles={roles} />{" "}
-    </>
-  );
+  return <UserDetail user={user} locations={locations} roles={roles} />;
 }
 
 export const getServerSideProps: GetServerSideProps = async (context) => {
