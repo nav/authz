@@ -15,7 +15,10 @@ function Checkbox(props: CheckboxProps) {
     <label htmlFor={props.id} className={styles.checkbox} style={props.style}>
       <input
         id={props.id}
+        aria-describedby="comments-description"
+        name="comments"
         type="checkbox"
+        className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
         checked={props.checked}
         defaultChecked={props.defaultChecked}
         disabled={props.disabled || false}

@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
-import { Divider, Heading } from "@chakra-ui/react";
 
+import Breadcrumbs from "../../../components/Breadcrumbs";
 import { definitions } from "../../../config";
 import type { IRole } from "../../../types/roles";
 import { Roles } from "../../../components/Roles";
@@ -10,12 +10,17 @@ type IndexProps = {
 };
 
 export default function Index({ roles }: IndexProps) {
+  const breadcrumbs = [
+    { title: "Settings", href: "/" },
+    { title: "IAM", href: "/" },
+    { title: "Roles", href: "/settings/iam/roles" },
+  ];
+
   return (
-    <>
-      <Heading size="md">Roles</Heading>
-      <Divider my={5} />
+    <div>
+      <Breadcrumbs pieces={breadcrumbs} />
       <Roles roles={roles} />
-    </>
+    </div>
   );
 }
 

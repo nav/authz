@@ -1,7 +1,5 @@
 import { SyntheticEvent } from "react";
-import { Input, InputGroup, InputRightElement } from "@chakra-ui/react";
-
-import { SearchIcon } from "@chakra-ui/icons";
+import { SearchCircleIcon } from "@heroicons/react/outline";
 
 type IFilterableItem = Record<string, any>;
 
@@ -31,12 +29,15 @@ function Filter({ title, items, filterKey, onFilter }: IFilterProps) {
   };
 
   return (
-    <InputGroup size="sm" w="50%" alignSelf="flex-end">
-      <InputRightElement pointerEvents="none">
-        <SearchIcon color="gray.500" />
-      </InputRightElement>
-      <Input placeholder={`Search ${title}`} onChange={filterItems} />
-    </InputGroup>
+    <div className="mt-1 relative rounded-md shadow-sm">
+      <input
+        type="text"
+        name="search"
+        className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pr-10 sm:text-sm border-gray-300 rounded-md"
+        placeholder={`Search ${title}`}
+        onChange={filterItems}
+      />
+    </div>
   );
 }
 

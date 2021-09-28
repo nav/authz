@@ -1,16 +1,3 @@
-import {
-  Avatar,
-  Box,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Wrap,
-  WrapItem,
-} from "@chakra-ui/react";
-
 import type { IRole } from "../types/roles";
 import type { IPermission } from "../types/permissions";
 import { Permission } from "./Permissions";
@@ -20,22 +7,22 @@ type RoleProps = {
 };
 
 function Role({ role }: RoleProps) {
-  return <Box>{role.name}</Box>;
+  return <div>{role.name}</div>;
 }
 
 function RoleRow({ role }: RoleProps) {
   const _perms = role.permissions.map((perm: IPermission) => (
-    <WrapItem key={perm.id}>
+    <div className="inline-block mr-2 mb-2" key={perm.id}>
       <Permission permission={perm} />
-    </WrapItem>
+    </div>
   ));
   return (
-    <Tr>
-      <Td>{role.name}</Td>
-      <Td>
-        <Wrap>{_perms}</Wrap>
-      </Td>
-    </Tr>
+    <div className="py-4 sm:py-5 sm:grid sm:grid-cols-8 sm:gap-4 sm:px-6">
+      <dt className="text-sm font-medium text-gray-500">{role.name}</dt>
+      <dd className="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-7">
+        {_perms}
+      </dd>
+    </div>
   );
 }
 
@@ -49,15 +36,11 @@ function Roles({ roles }: RolesProps) {
   ));
 
   return (
-    <Table variant="simple" size="md">
-      <Thead>
-        <Tr>
-          <Th>Name</Th>
-          <Th>Permissions</Th>
-        </Tr>
-      </Thead>
-      <Tbody>{_roles}</Tbody>
-    </Table>
+    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div className="border-t border-gray-200 px-4 py-5 sm:p-0">
+        <dl className="sm:divide-y sm:divide-gray-200">{_roles}</dl>
+      </div>
+    </div>
   );
 }
 

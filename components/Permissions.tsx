@@ -1,15 +1,3 @@
-import {
-  Badge,
-  Box,
-  Tooltip,
-  ListItem,
-  UnorderedList,
-  Text,
-  Wrap,
-  WrapItem,
-  Grid,
-  GridItem,
-} from "@chakra-ui/react";
 import type { IPermission, IPermissionDict } from "../types/permissions";
 
 type PermissionProps = {
@@ -19,15 +7,12 @@ type PermissionProps = {
 function Permission({ permission }: PermissionProps) {
   const [action, model] = permission.codename.split("_");
   return (
-    <Tooltip label={permission.description} aria-label="A tooltip">
-      <Badge
-        style={{
-          cursor: "default",
-        }}
-      >
-        {action} {model}
-      </Badge>
-    </Tooltip>
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 cursor-default"
+      title={permission.description}
+    >
+      {action} {model}
+    </span>
   );
 }
 
@@ -41,18 +26,18 @@ function renderTree(node: any) {
     if (typeof value === "object" && value !== null) {
       if (value.hasOwnProperty("id")) {
         buffer.push(
-          <Box my={1} key={value.id}>
+          <div key={value.id} className="mb-2">
             <Permission permission={value} />
-          </Box>
+          </div>
         );
       } else {
         buffer.push(
-          <UnorderedList key={`item_${key}`}>
-            <ListItem>
-              <Text>{value.hasOwnProperty("id") ? "" : key}</Text>
+          <ul key={`item_${key}`} className="list-disc m-4">
+            <li>
+              <span>{value.hasOwnProperty("id") ? "" : key}</span>
               {renderTree(value)}
-            </ListItem>
-          </UnorderedList>
+            </li>
+          </ul>
         );
       }
     }
@@ -61,7 +46,11 @@ function renderTree(node: any) {
 }
 
 function Permissions({ permissions }: PermissionsProps) {
-  return <Grid autoFlow="column">{renderTree(permissions)}</Grid>;
+  return (
+    <div className="grid grid-flow-col auto-cols-max gap-10">
+      {renderTree(permissions)}
+    </div>
+  );
 }
 
 export { Permission, Permissions };
