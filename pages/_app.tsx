@@ -1,16 +1,19 @@
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
-import { Box, ChakraProvider } from "@chakra-ui/react";
 import { Sidebar } from "../components/Sidebar";
 
 function AuthzApp({ Component, pageProps }: AppProps) {
   return (
-    <ChakraProvider>
+    <div className="h-screen flex overflow-hidden bg-white">
       <Sidebar></Sidebar>
-      <Box maxW="4xl" my={20} mx="auto">
-        <Component {...pageProps} />
-      </Box>
-    </ChakraProvider>
+      <main className="flex-1 relative overflow-y-auto focus:outline-none">
+        <div className="py-6">
+          <div className="max-w-10xl mx-auto px-4 sm:px-6 md:px-8">
+            <Component {...pageProps} />
+          </div>
+        </div>
+      </main>
+    </div>
   );
 }
 export default AuthzApp;

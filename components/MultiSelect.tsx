@@ -1,13 +1,4 @@
 import { useState, useEffect, SyntheticEvent } from "react";
-import {
-  Box,
-  Circle,
-  Divider,
-  Heading,
-  HStack,
-  Spacer,
-  VStack,
-} from "@chakra-ui/react";
 import { FixedSizeList } from "react-window";
 
 import { Checkbox } from "./Checkbox";
@@ -57,20 +48,7 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
     _onSelect(items.filter((item) => statesClone[item.id]));
   };
 
-  const empty = (
-    <Box w="full" pt="15ex">
-      <Circle
-        size="2em"
-        bg="gray.100"
-        color="white"
-        fontSize="8xl"
-        m="0 auto"
-        opacity="0.2"
-      >
-        🤷
-      </Circle>
-    </Box>
-  );
+  const empty = <div>🤷</div>;
 
   const [filteredItems, setFilteredItems] = useState(items);
 
@@ -127,10 +105,10 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
     );
 
   return (
-    <VStack align="flex-start" w="full">
-      <HStack w="full">
-        <VStack align="flex-start">
-          <Heading size="sm">{title}</Heading>
+    <div>
+      <div className="font-bold">{title}</div>
+      <div className="grid grid-cols-2">
+        <div className="mt-3">
           <Checkbox
             id={`chk_${title}`}
             checked={!isDisabled && allItemsChecked}
@@ -149,20 +127,18 @@ function MultiSelect({ title, items, isDisabled, onSelect }: IMultiSelect) {
           >
             All {title}
           </Checkbox>
-        </VStack>
-        <Spacer />
+        </div>
         <Filter
           title={title}
           items={items}
           filterKey="name"
           onFilter={(_filteredItems) => setFilteredItems(_filteredItems)}
         />
-      </HStack>
+      </div>
 
-      <Divider />
-
+      <hr className="my-4" />
       {itemList}
-    </VStack>
+    </div>
   );
 }
 

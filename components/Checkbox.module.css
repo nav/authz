@@ -3,10 +3,9 @@
   padding: 1px 0;
 }
 .checkbox:hover {
-  background: aliceblue;
+  background: #eef2ff;
 }
 .checkbox input {
-  transform: scale(1.2);
   tranform-origin: 0 0;
   margin-right: 8px;
   margin-left: 1px;

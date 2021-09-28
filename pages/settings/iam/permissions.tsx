@@ -1,6 +1,6 @@
 import { GetServerSideProps } from "next";
-import { Divider, Heading } from "@chakra-ui/react";
 
+import Breadcrumbs from "../../../components/Breadcrumbs";
 import { definitions } from "../../../config";
 import type { IPermissionDict } from "../../../types/permissions";
 import { Permissions } from "../../../components/Permissions";
@@ -10,11 +10,17 @@ type IndexProps = {
 };
 
 export default function Index({ permissions }: IndexProps) {
+  const breadcrumbs = [
+    { title: "Settings", href: "/" },
+    { title: "IAM", href: "/" },
+    { title: "Permissions", href: "/settings/iam/permissions" },
+  ];
+
   return (
-    <>
-      <Heading size="md">Permissions</Heading>
-      <Divider my={5} /> <Permissions permissions={permissions} />
-    </>
+    <div>
+      <Breadcrumbs pieces={breadcrumbs} />
+      <Permissions permissions={permissions} />
+    </div>
   );
 }
 
