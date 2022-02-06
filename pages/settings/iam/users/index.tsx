@@ -5,7 +5,6 @@ import Breadcrumbs from "../../../../components/Breadcrumbs";
 
 import { definitions } from "../../../../config";
 import type { IRole } from "../../../../types/roles";
-import type { ISegment } from "../../../../types/segments";
 import type { IUser } from "../../../../types/users";
 
 type UserRowProps = {
